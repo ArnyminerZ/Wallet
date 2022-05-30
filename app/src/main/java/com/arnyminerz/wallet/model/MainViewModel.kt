@@ -8,8 +8,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.arnyminerz.wallet.pkpass.Parser
-import com.arnyminerz.wallet.pkpass.data.Barcode
+import com.arnyminerz.wallet.pkpass.data.Pass
+import com.arnyminerz.wallet.pkpass.data.PassAspect
+import com.arnyminerz.wallet.pkpass.data.boarding.BoardingData
+import com.arnyminerz.wallet.pkpass.data.boarding.TransitType
 import com.arnyminerz.wallet.utils.drop
+import com.arnyminerz.wallet.utils.getColor
+import com.arnyminerz.wallet.utils.getFields
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
@@ -22,9 +27,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     private lateinit var parser: Parser
 
-    var bitmap by mutableStateOf<Bitmap?>(null)
-
-    var barcode by mutableStateOf<Barcode?>(null)
+    var pass by mutableStateOf<Pass?>(null)
 
     /**
      * Loads a pkpass from the response uri from a file picker.
@@ -55,16 +58,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Timber.i("Loaded pkpass file. Valid: $manifestValid")
 
                 Timber.i("Loading barcode...")
-                barcode = parser.getBarcode()
-                Timber.i("Loading bitmap...")
-                bitmap = parser.getBitmap(context)
-                    .also { bmp ->
-                        File(context.filesDir, "file.png")
-                            .also { if (it.exists()) it.delete() }
-                            .outputStream()
-                            .use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
-                    }
-
+                val data = parser.readPass()
+                val boardingPass = data.getJSONObject("boardingPass")
+                pass = Pass(
+                    data.getInt("formatVersion"),
+                    data.getString("passTypeIdentifier"),
+                    data.getString("serialNumber"),
+                    data.getString("teamIdentifier"),
+                    data.getString("organizationName"),
+                    data.getString("description"),
+                    PassAspect(
+                        data.getColor("labelColor"),
+                        data.getColor("foregroundColor"),
+                        data.getColor("backgroundColor"),
+                    ),
+                    parser.getBarcode()
+                        .also {
+                            Timber.i("Loading bitmap...")
+                            it.bitmap = parser.getBitmap(context)
+                                .also { bmp ->
+                                    File(context.filesDir, "file.png")
+                                        .also { if (it.exists()) it.delete() }
+                                        .outputStream()
+                                        .use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                                }
+                        },
+                    BoardingData(
+                        TransitType.valueOf(boardingPass.getString("transitType")),
+                        boardingPass.getFields("headerFields"),
+                        boardingPass.getFields("primaryFields"),
+                        boardingPass.getFields("secondaryFields"),
+                        boardingPass.getFields("auxiliaryFields"),
+                        boardingPass.getFields("backFields"),
+                    )
+                )
             }
     }
 }
