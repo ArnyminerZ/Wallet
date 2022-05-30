@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Wallet</string>
+
+    <string name="appbar_list">Passes List</string>
+    <string name="appbar_cloud">Cloud Storage</string>
+
+    <string name="action_add">Add</string>
+
+    <string name="trip_type_air">Air trip</string>
+    <string name="trip_type_boat">Boat trip</string>
+    <string name="trip_type_bus">Bus trip</string>
+    <string name="trip_type_generic">Generic trip</string>
+    <string name="trip_type_train">Train trip</string>
 </resources>
