@@ -1,5 +1,6 @@
 package com.arnyminerz.wallet.pkpass.data
 
+import android.graphics.Bitmap
 import com.google.zxing.BarcodeFormat
 
 data class Barcode(
@@ -14,4 +15,6 @@ data class Barcode(
         "PKBarcodeFormatAztec" -> BarcodeFormat.AZTEC
         else -> null
     }
+
+    var bitmap: Bitmap? = null
 }
