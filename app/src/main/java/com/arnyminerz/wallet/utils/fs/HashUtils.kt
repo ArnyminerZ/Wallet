@@ -1,6 +1,6 @@
 package com.arnyminerz.wallet.utils.fs
 
-import com.arnyminerz.wallet.utils.fs.StringUtils.encodeHex
+import com.arnyminerz.wallet.utils.StringUtils.encodeHex
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
