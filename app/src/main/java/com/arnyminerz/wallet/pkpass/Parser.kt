@@ -60,7 +60,7 @@ class Parser(context: Context, pkpass: InputStream) {
         IOException::class,
         JSONException::class,
     )
-    private fun readPass(): JSONObject {
+    fun readPass(): JSONObject {
         val passFile = getFile("pass.json")
         return JSONObject(passFile.readText())
     }
