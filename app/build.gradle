@@ -59,7 +59,7 @@ dependencies {
     implementation 'androidx.compose.material3:material3:1.0.0-alpha12'
 
     // For loading images
-    implementation 'io.coil-kt:coil-compose:2.1.0'
+    implementation 'io.coil-kt:coil-compose:2.2.1'
 
     implementation 'com.google.accompanist:accompanist-pager:0.24.9-beta'
 
