@@ -10,11 +10,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.annotation.WorkerThread
 import com.arnyminerz.wallet.BuildConfig
-import com.arnyminerz.wallet.storage.SERVER_URL
 import com.arnyminerz.wallet.utils.getParcelableCompat
-import com.arnyminerz.wallet.utils.getPreference
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
@@ -24,6 +20,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import timber.log.Timber
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -43,14 +40,29 @@ class AccountHelper private constructor(context: Context) {
 
     private val am = AccountManager.get(context)
 
-    private val httpClient = OkHttpClient.Builder()
+    private var httpClient = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor("client_id", "client_secret"))
         .build()
 
     val accounts: Array<out Account>
         get() = am.getAccountsByType(BuildConfig.APPLICATION_ID)
 
-    private suspend fun getServerUrl(context: Context) = context.getPreference(SERVER_URL).first()
+    @WorkerThread
+    fun addAccount(
+        username: String,
+        password: String,
+        clientId: String,
+        clientSecret: String,
+        serverUrl: String,
+    ) = am.addAccountExplicitly(
+        Account(username, BuildConfig.APPLICATION_ID),
+        password,
+        Bundle().apply {
+            putString("client_id", clientId)
+            putString("client_secret", clientSecret)
+            putString("server", serverUrl)
+        },
+    )
 
     @WorkerThread
     suspend fun getAuthToken(activity: Activity, account: Account): String =
@@ -74,11 +86,21 @@ class AccountHelper private constructor(context: Context) {
                         // Obtain an auth token
                         runBlocking {
                             // TODO: Check for null
-                            val base = getServerUrl(activity)!!
                             val username = account.name
                             val password = am.getPassword(account)
-                            val requestData = "grant_type=password&username=$username&password=$password"
-                            loginRequest(base)
+                            val requestData =
+                                "grant_type=password&username=$username&password=$password"
+
+                            val serverUrl = am.getUserData(account, "server")
+                            val clientId = am.getUserData(account, "client_id")
+                            val clientSecret = am.getUserData(account, "client_secret")
+
+                            httpClient = httpClient.newBuilder()
+                                .addInterceptor(AuthInterceptor(clientId, clientSecret))
+                                .build()
+
+                            val response = loginRequest(serverUrl, requestData)
+                            Timber.i("Login response: $response")
                         }
                         /*val url = URL("")
                         val conn = url.openConnection() as HttpURLConnection
@@ -102,7 +124,7 @@ class AccountHelper private constructor(context: Context) {
             .build()
         httpClient
             .newCall(request)
-            .enqueue(object: Callback {
+            .enqueue(object : Callback {
                 override fun onResponse(call: Call, response: Response) {
                     c.resume(response.body?.string())
                 }
