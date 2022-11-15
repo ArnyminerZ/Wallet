@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.arnyminerz.wallet.model.MainViewModel
 import com.arnyminerz.wallet.ui.elements.PassViewer
+import com.arnyminerz.wallet.ui.screens.LoginScreen
 import com.arnyminerz.wallet.ui.theme.WalletTheme
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -56,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     bottomBar = {
                         BottomAppBar(
-                            icons = {
+                            actions = {
                                 IconButton(
                                     onClick = { scope.launch { pagerState.scrollToPage(0) } },
                                 ) {
@@ -91,23 +92,23 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = stringResource(R.string.action_add),
                                     )
                                 }
-                            }
+                            },
                         )
                     }
                 ) { paddingValues ->
                     HorizontalPager(
                         count = 2,
                         state = pagerState,
+                        modifier = Modifier.padding(paddingValues),
                     ) { page ->
-                        Text(
-                            text = "Hello world from page $page!",
-                            modifier = Modifier.padding(paddingValues)
-                        )
-                        if (page == 0)
-                            if (mainViewModel.pass != null) {
+                        when(page) {
+                            0 -> if (mainViewModel.pass != null) {
                                 Timber.i("Loading pass...")
                                 PassViewer(pass = mainViewModel.pass!!)
                             } else Timber.i("Bitmap and/or barcode are null.")
+                            1 -> LoginScreen()
+                            else -> Text("Hello world from page $page!")
+                        }
                     }
                 }
             }
