@@ -88,18 +88,12 @@ class AccountHelper private constructor(context: Context) {
                             // TODO: Check for null
                             val username = account.name
                             val password = am.getPassword(account)
-                            val requestData =
-                                "grant_type=password&username=$username&password=$password"
 
                             val serverUrl = am.getUserData(account, "server")
                             val clientId = am.getUserData(account, "client_id")
                             val clientSecret = am.getUserData(account, "client_secret")
 
-                            httpClient = httpClient.newBuilder()
-                                .addInterceptor(AuthInterceptor(clientId, clientSecret))
-                                .build()
-
-                            val response = loginRequest(serverUrl, requestData)
+                            val response = login(username, password, serverUrl, clientId, clientSecret)
                             Timber.i("Login response: $response")
                         }
                         /*val url = URL("")
@@ -115,10 +109,25 @@ class AccountHelper private constructor(context: Context) {
             )
         }
 
+    suspend fun login(
+        username: String,
+        password: String,
+        serverUrl: String,
+        clientId: String,
+        clientSecret: String,
+    ): String? {
+        httpClient = httpClient.newBuilder()
+            .addInterceptor(AuthInterceptor(clientId, clientSecret))
+            .build()
+
+        val requestData = "grant_type=password&username=$username&password=$password"
+        return loginRequest(serverUrl, requestData)
+    }
+
     private suspend fun loginRequest(appUrl: String, requestData: String) = suspendCoroutine { c ->
         val body = requestData.toRequestBody(CONTENT_TYPE)
         val request = Request.Builder()
-            .url(appUrl)
+            .url("$appUrl/oauth/token".also { Timber.d("Request: $it") })
             .addHeader("Content-Type", "application/x-www-form-urlencoded")
             .post(body)
             .build()
