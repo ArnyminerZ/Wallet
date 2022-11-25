@@ -13,6 +13,8 @@
         android:name="android.permission.USE_CREDENTIALS"
         android:maxSdkVersion="22" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -23,6 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Wallet"
         android:name=".App"
+        android:enableOnBackInvokedCallback="true"
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".MainActivity"
@@ -34,6 +37,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".scanner.ScannerActivity" />
     </application>
 
 </manifest>
