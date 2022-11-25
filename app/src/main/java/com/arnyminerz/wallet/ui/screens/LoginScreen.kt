@@ -1,31 +1,32 @@
 package com.arnyminerz.wallet.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.launch
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.QrCodeScanner
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.arnyminerz.wallet.R
-import com.arnyminerz.wallet.account.AccountHelper
-import com.arnyminerz.wallet.utils.doAsync
-import com.arnyminerz.wallet.utils.ui
-import timber.log.Timber
+import com.arnyminerz.wallet.scanner.QrCodeAnalyzer
+import com.arnyminerz.wallet.scanner.ScanCode
+import com.arnyminerz.wallet.scanner.ScannerActivity
+import com.arnyminerz.wallet.ui.pages.login.ServerConfigurationPage
+import com.arnyminerz.wallet.utils.activity
+import com.arnyminerz.wallet.utils.toast
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.rememberPagerState
+import org.json.JSONException
+import org.json.JSONObject
 
+@ExperimentalPagerApi
 @Preview(
     showSystemUi = true,
     showBackground = true,
@@ -35,88 +36,49 @@ import timber.log.Timber
 fun LoginScreen() {
     val context = LocalContext.current
 
-    Column {
-        var fieldsEnabled by remember { mutableStateOf(true) }
+    val pagerState = rememberPagerState()
 
-        var username by remember { mutableStateOf("arnyminer.z@gmail.com") }
-        var password by remember { mutableStateOf("2Qmhxw8h2TE8Gbwhc@6rzcK%wZ&w9Q2c") }
-        var server by remember { mutableStateOf("https://firefly.arnyminerz.com") }
-        var clientId by remember { mutableStateOf("2") }
-        var clientSecret by remember { mutableStateOf("-") }
+    val scannerLauncher = rememberLauncherForActivityResult(ScanCode()) { barcode ->
+        if (barcode == null) return@rememberLauncherForActivityResult
+        try {
+            val json = JSONObject(barcode)
+            if (!json.has("server") || !json.has("client_id") || !json.has("client_secret"))
+                context.toast(R.string.error_invalid_code)
+            else {
 
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text(stringResource(R.string.login_username)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            enabled = fieldsEnabled,
-        )
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text(stringResource(R.string.login_password)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            enabled = fieldsEnabled,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        )
-        OutlinedTextField(
-            value = server,
-            onValueChange = { server = it },
-            label = { Text(stringResource(R.string.login_server)) },
-            supportingText = { Text("https://...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            enabled = fieldsEnabled,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-        )
-        OutlinedTextField(
-            value = clientId,
-            onValueChange = { clientId = it },
-            label = { Text(stringResource(R.string.login_oauth_client_id)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            enabled = fieldsEnabled,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-        )
-        OutlinedTextField(
-            value = clientSecret,
-            onValueChange = { clientSecret = it },
-            label = { Text(stringResource(R.string.login_oauth_client_secret)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            enabled = fieldsEnabled,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        )
+            }
+        } catch (e: JSONException) {
+            context.toast(R.string.error_invalid_code)
+        }
+    }
 
-        Button(
-            enabled = fieldsEnabled,
-            onClick = {
-                fieldsEnabled = false
-                doAsync {
-                    Timber.i("Trying to log in...")
-                    val ah = AccountHelper.getInstance(context)
-                    val t = ah.login(username, password, server, clientId, clientSecret)
-                    Timber.i("Token: $t")
-
-                    ui { fieldsEnabled = true }
-                }
-
-                /*Timber.i("Adding account...")
-                val ah = AccountHelper.getInstance(context)
-                val added = ah.addAccount(username, password, clientId, clientSecret, server)
-                Timber.i("Account added: $added")*/
-            },
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { context.activity?.finish() }) {
+                        Icon(Icons.Rounded.Close, stringResource(R.string.image_desc_close))
+                    }
+                },
+                title = { Text(text = stringResource(R.string.title_add_account)) },
+                actions = {
+                    IconButton(
+                        onClick = { scannerLauncher.launch() }
+                    ) { Icon(Icons.Rounded.QrCodeScanner, stringResource(R.string.image_desc_scan_qr)) }
+                },
+            )
+        }
+    ) { paddingValues ->
+        HorizontalPager(
+            count = 1,
+            modifier = Modifier
+                .padding(paddingValues),
+            userScrollEnabled = false,
+            state = pagerState,
         ) {
-            Text(stringResource(R.string.login_action))
+            when (it) {
+                0 -> ServerConfigurationPage()
+            }
         }
     }
 }

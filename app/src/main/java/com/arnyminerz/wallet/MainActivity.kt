@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
@@ -22,10 +25,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.arnyminerz.wallet.model.MainViewModel
 import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.arnyminerz.wallet.ui.screens.LoginScreen
+import com.arnyminerz.wallet.ui.screens.MainScreen
 import com.arnyminerz.wallet.ui.theme.WalletTheme
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -46,70 +55,77 @@ class MainActivity : ComponentActivity() {
     @OptIn(
         ExperimentalPagerApi::class,
         ExperimentalMaterial3Api::class,
+        ExperimentalAnimationApi::class,
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WalletTheme {
-                val pagerState = rememberPagerState()
-                val scope = rememberCoroutineScope()
+                val navController = rememberAnimatedNavController()
 
-                Scaffold(
-                    bottomBar = {
-                        BottomAppBar(
-                            actions = {
-                                IconButton(
-                                    onClick = { scope.launch { pagerState.scrollToPage(0) } },
-                                ) {
-                                    Icon(
-                                        imageVector = if (pagerState.currentPage == 0)
-                                            Icons.Rounded.List
-                                        else
-                                            Icons.Outlined.List,
-                                        contentDescription = stringResource(R.string.appbar_list)
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { scope.launch { pagerState.scrollToPage(1) } },
-                                ) {
-                                    Icon(
-                                        imageVector = if (pagerState.currentPage == 1)
-                                            Icons.Rounded.Cloud
-                                        else
-                                            Icons.Outlined.Cloud,
-                                        contentDescription = stringResource(R.string.appbar_cloud)
-                                    )
-                                }
-                            },
-                            floatingActionButton = {
-                                FloatingActionButton(
-                                    onClick = {
-                                        picker.launch("application/*")
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Add,
-                                        contentDescription = stringResource(R.string.action_add),
-                                    )
-                                }
-                            },
-                        )
-                    }
-                ) { paddingValues ->
-                    HorizontalPager(
-                        count = 2,
-                        state = pagerState,
-                        modifier = Modifier.padding(paddingValues),
-                    ) { page ->
-                        when(page) {
-                            0 -> if (mainViewModel.pass != null) {
-                                Timber.i("Loading pass...")
-                                PassViewer(pass = mainViewModel.pass!!)
-                            } else Timber.i("Bitmap and/or barcode are null.")
-                            1 -> LoginScreen()
-                            else -> Text("Hello world from page $page!")
+                AnimatedNavHost(navController = navController, startDestination = "Home") {
+                    composable(
+                        "Home",
+                        enterTransition = {
+                            when (initialState.destination.route) {
+                                "Red" ->
+                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                                else -> null
+                            }
+                        },
+                        exitTransition = {
+                            when (targetState.destination.route) {
+                                "Red" ->
+                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                                else -> null
+                            }
+                        },
+                        popEnterTransition = {
+                            when (initialState.destination.route) {
+                                "Red" ->
+                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                                else -> null
+                            }
+                        },
+                        popExitTransition = {
+                            when (targetState.destination.route) {
+                                "Red" ->
+                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                                else -> null
+                            }
                         }
-                    }
+                    ) { MainScreen(mainViewModel, picker, navController) }
+                    composable(
+                        "AddAccount",
+                        enterTransition = {
+                            when (initialState.destination.route) {
+                                "Red" ->
+                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                                else -> null
+                            }
+                        },
+                        exitTransition = {
+                            when (targetState.destination.route) {
+                                "Red" ->
+                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                                else -> null
+                            }
+                        },
+                        popEnterTransition = {
+                            when (initialState.destination.route) {
+                                "Red" ->
+                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                                else -> null
+                            }
+                        },
+                        popExitTransition = {
+                            when (targetState.destination.route) {
+                                "Red" ->
+                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                                else -> null
+                            }
+                        }
+                    ) { LoginScreen() }
                 }
             }
         }
