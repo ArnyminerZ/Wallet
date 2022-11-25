@@ -1,6 +1,13 @@
 package com.arnyminerz.wallet.utils
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.widget.Toast
+import androidx.annotation.IntDef
+import androidx.annotation.StringRes
+import androidx.annotation.UiThread
+import androidx.appcompat.app.AppCompatActivity
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -30,3 +37,26 @@ fun <T> Context.getPreference(key: Preferences.Key<T>, default: T) = dataStore
 fun <T> Context.getPreference(key: Preferences.Key<T>) = dataStore
     .data
     .map { it[key] }
+
+/**
+ * Returns the [AppCompatActivity] attached to the context.
+ * @author Arnau Mora
+ * @since 20221126
+ */
+val Context.activity: AppCompatActivity?
+    get() = when (this) {
+        is AppCompatActivity -> this
+        is ContextWrapper -> baseContext.activity
+        else -> null
+    }
+
+@IntDef(Toast.LENGTH_SHORT, Toast.LENGTH_LONG)
+annotation class ToastDuration
+
+@UiThread
+fun Context.toast(text: CharSequence, @ToastDuration duration: Int = Toast.LENGTH_SHORT) =
+    Toast.makeText(this, text, duration).show()
+
+@UiThread
+fun Context.toast(@StringRes textRes: Int, @ToastDuration duration: Int = Toast.LENGTH_SHORT) =
+    Toast.makeText(this, textRes, duration).show()
