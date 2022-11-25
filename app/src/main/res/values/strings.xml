@@ -12,6 +12,9 @@
     <string name="trip_type_generic">Generic trip</string>
     <string name="trip_type_train">Train trip</string>
 
+    <string name="title_add_account">Add Account</string>
+    <string name="title_scan_code">Scan QR Code</string>
+    
     <string name="login_username">Username</string>
     <string name="login_password">Password</string>
     <string name="login_server">Server</string>
@@ -19,4 +22,13 @@
     <string name="login_oauth_client_id">OAuth Client ID</string>
     <string name="login_oauth_client_secret">OAuth Client Secret</string>
     <string name="login_action">Action</string>
+
+    <string name="error_invalid_code">Invalid QR Code</string>
+
+    <string name="permission_camera_title">Camera Permission</string>
+    <string name="permission_camera_message">It\'s required to have the camera permission to launch the scanner.</string>
+    <string name="permission_grant">Grant</string>
+
+    <string name="image_desc_close">Close</string>
+    <string name="image_desc_scan_qr">Scan QR</string>
 </resources>
