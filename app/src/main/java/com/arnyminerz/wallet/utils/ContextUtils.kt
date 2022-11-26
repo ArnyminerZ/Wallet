@@ -13,8 +13,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
+import com.arnyminerz.wallet.account.AuthCode
 import com.arnyminerz.wallet.utils.serializer.JsonSerializable
 import com.arnyminerz.wallet.utils.serializer.JsonSerializer
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
@@ -54,11 +56,10 @@ fun <T> Context.getPreference(key: Preferences.Key<T>) = dataStore
  * @param default The default value to return if there's no value stored at [key].
  * @return The value stored at [key], or [default] if none.
  */
-fun <T: JsonSerializable> Context.getPreference(key: Preferences.Key<Set<String>>, default: Set<String>, serializer: JsonSerializer<T>) = dataStore
+fun <T: JsonSerializable> Context.getPreference(key: Preferences.Key<Set<String>>, default: Set<String>, serializer: JsonSerializer<T>): Flow<List<T>> = dataStore
     .data
     .map { it[key] ?: default }
     .map { list ->
-        Timber.i("List: $list")
         list.map { JSONObject(it) }
             .map { serializer.fromJson(it) }
     }
@@ -72,6 +73,15 @@ fun <T: JsonSerializable> Context.getPreference(key: Preferences.Key<Set<String>
  */
 suspend fun <T> Context.setPreference(key: Preferences.Key<T>, value: T) = dataStore
     .edit { it[key] = value }
+
+/**
+ * Updates the value of the given preference.
+ * @author Arnau Mora
+ * @since 20221126
+ * @param values A collection with all the keys and their respective values
+ */
+suspend fun <T> Context.setPreferences(vararg values: Preferences.Pair<T>) = dataStore
+    .edit { it.putAll(*values) }
 
 /**
  * Removed the stored value for the given preference.
@@ -97,17 +107,33 @@ suspend fun Context.addToPreference(key: Preferences.Key<Set<String>>, vararg va
     }
 
 /**
+ * Removed the stored value for the given preference.
+ * @author Arnau Mora
+ * @since 20221126
+ * @param key The key to store the value at.
+ */
+suspend fun Context.popFromPreference(key: Preferences.Key<Set<String>>, vararg values: String) =
+    getPreference(key, emptySet()).first().let { set ->
+        val entries = set.toMutableSet()
+        entries.removeAll(values.toSet())
+        setPreference(key, entries)
+    }
+
+/**
  * Adds the given value to the set in the [key]'s preference.
  * @author Arnau Mora
  * @since 20221126
  * @param key The key to store the value at.
  * @param values All the values to add.
+ * @return The index of the first stored item of [values].
  */
 suspend fun <T: JsonSerializable> Context.addToPreference(key: Preferences.Key<Set<String>>, vararg values: T) =
     getPreference(key, emptySet()).first().let { set ->
         val entries = set.toMutableSet()
+        val size = entries.size
         entries.addAll(values.toList().map { it.toJson().toString() })
         setPreference(key, entries)
+        size
     }
 
 /**

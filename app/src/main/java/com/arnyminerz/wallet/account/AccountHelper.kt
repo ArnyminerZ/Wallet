@@ -2,39 +2,28 @@ package com.arnyminerz.wallet.account
 
 import android.accounts.Account
 import android.accounts.AccountManager
-import android.accounts.AccountManagerCallback
-import android.accounts.AccountManagerFuture
-import android.app.Activity
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.WorkerThread
-import androidx.browser.customtabs.CustomTabColorSchemeParams
-import androidx.browser.customtabs.CustomTabsCallback
-import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.browser.customtabs.CustomTabsServiceConnection
 import com.arnyminerz.wallet.BuildConfig
+import com.arnyminerz.wallet.storage.authCodes
 import com.arnyminerz.wallet.storage.tempClientId
 import com.arnyminerz.wallet.storage.tempClientSecret
 import com.arnyminerz.wallet.storage.tempServer
-import com.arnyminerz.wallet.utils.getParcelableCompat
-import com.arnyminerz.wallet.utils.setPreference
+import com.arnyminerz.wallet.utils.popFromPreference
+import com.arnyminerz.wallet.utils.setPreferences
 import com.arnyminerz.wallet.utils.toast
 import com.arnyminerz.wallet.utils.ui
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
-import okhttp3.Call
-import okhttp3.Callback
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import java.net.URL
+import java.net.URLEncoder
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -61,80 +50,81 @@ class AccountHelper private constructor(context: Context) {
         get() = am.getAccountsByType(BuildConfig.APPLICATION_ID)
 
     @WorkerThread
-    fun addAccount(
-        username: String,
-        password: String,
-        clientId: String,
-        clientSecret: String,
-        serverUrl: String,
-    ) = am.addAccountExplicitly(
-        Account(username, BuildConfig.APPLICATION_ID),
-        password,
-        Bundle().apply {
-            putString("client_id", clientId)
-            putString("client_secret", clientSecret)
-            putString("server", serverUrl)
-        },
-    )
+    suspend fun addAccount(
+        authCode: AuthCode,
+        tokenType: String,
+        accessToken: String,
+        refreshToken: String,
+    ) {
+        val url = URL(authCode.server)
+        val rawAccountInfo = getRequest(
+            Uri.Builder()
+                .authority(url.authority)
+                .scheme(url.protocol)
+                .path("/api/v1/about/user")
+            .build(),
+            mapOf(
+                "Authorization" to "$tokenType $accessToken",
+            )
+        )
+        Timber.w("Account info: $rawAccountInfo")
+        val accountInfoResponse = JSONObject(rawAccountInfo)
+        val accountInfo = FireflyAccount.fromFireflyData(accountInfoResponse.getJSONObject("data"))
+
+        val account = Account(accountInfo.email, BuildConfig.APPLICATION_ID)
+        am.addAccountExplicitly(account, authCode.clientSecret, Bundle())
+        am.setUserData(account, "token_type", tokenType)
+        am.setUserData(account, "refresh_token", refreshToken)
+        am.setUserData(account, "server", authCode.server)
+        am.setUserData(account, "client_id", authCode.clientId)
+        am.setUserData(account, "client_secret", authCode.clientSecret)
+        am.setUserData(account, "code", authCode.code)
+        am.setAuthToken(account, "firefly", accessToken)
+    }
 
     @WorkerThread
-    suspend fun getAuthToken(activity: Activity, account: Account): String =
-        suspendCancellableCoroutine { cont ->
-            am.getAuthToken(
-                account,
-                "Firefly III",
-                Bundle(),
-                activity,
-                object : AccountManagerCallback<Bundle> {
-                    override fun run(result: AccountManagerFuture<Bundle>) {
-                        val bundle = result.result
-                        bundle
-                            .getString(AccountManager.KEY_AUTHTOKEN)
-                            ?.also { return cont.resume(it) }
-
-                        bundle
-                            .getParcelableCompat(AccountManager.KEY_INTENT, Intent::class)
-                            ?.also { return activity.startActivity(it) }
-
-                        // Obtain an auth token
-                        runBlocking {
-                            // TODO: Check for null
-                            val username = account.name
-                            val password = am.getPassword(account)
-
-                            val serverUrl = am.getUserData(account, "server")
-                            val clientId = am.getUserData(account, "client_id")
-                            val clientSecret = am.getUserData(account, "client_secret")
-
-                            val response = login(username, password, serverUrl, clientId, clientSecret)
-                            Timber.i("Login response: $response")
-                        }
-                        /*val url = URL("")
-                        val conn = url.openConnection() as HttpURLConnection
-                        conn.apply {
-                            addRequestProperty("client_id", your client id)
-                            addRequestProperty("client_secret", your client secret)
-                            setRequestProperty("Authorization", "OAuth $token")
-                        }*/
-                    }
-                },
-                null,
-            )
-        }
-
     suspend fun login(
-        username: String,
-        password: String,
-        serverUrl: String,
-        clientId: String,
-        clientSecret: String,
-    ): String? {
+        authCode: AuthCode,
+    ) {
         httpClient = httpClient.newBuilder()
-            .addInterceptor(AuthInterceptor(clientId, clientSecret))
+            .addInterceptor(AuthInterceptor(authCode.clientId, authCode.clientSecret))
             .build()
 
-        val requestData = "grant_type=password&username=$username&password=$password"
-        return loginRequest(serverUrl, requestData)
+        val url = URL(authCode.server)
+        val uri = Uri.Builder()
+            .scheme(url.protocol)
+            .authority(url.authority)
+            .appendEncodedPath("oauth/token")
+            .build()
+        val response = postRequest(
+            uri,
+            mapOf(
+                "grant_type" to "authorization_code",
+                "code" to authCode.code!!,
+                "client_id" to authCode.clientId,
+                "client_secret" to authCode.clientSecret,
+                "redirect_uri" to "app://com.arnyminerz.wallet",
+            ),
+        )
+        val json = JSONObject(response)
+        if (json.has("hint") && json.getString("hint").contains("Authorization code has expired", true))
+            throw IllegalStateException("The authorization code has expired.")
+        if (json.has("token_type") && json.has("access_token") && json.has("refresh_token")) {
+            val tokenType = json.getString("token_type")
+            val accessToken = json.getString("access_token")
+            val refreshToken = json.getString("refresh_token")
+
+            Timber.i("Adding account...")
+            addAccount(authCode, tokenType, accessToken, refreshToken)
+
+            return
+        }
+        throw IOException("Could not handle server response. Response: $response")
+    }
+
+    @WorkerThread
+    suspend fun invalidateCode(context: Context, authCode: AuthCode) {
+        context.popFromPreference(authCodes, authCode.toJson().toString())
     }
 
     /**
@@ -150,40 +140,51 @@ class AccountHelper private constructor(context: Context) {
             // Code already authorised
             ui { context.toast("Already authed") }
         } else {
-            val url = "$server/oauth/authorize?client_id=$clientId&client_secret=$clientSecret&redirect_uri=app://com.arnyminerz.wallet&response_type=code"
+            val url = "$server/oauth/authorize?response_type=code&client_id=$clientId&client_secret=$clientSecret&redirect_uri=app://com.arnyminerz.wallet"
             val builder = CustomTabsIntent.Builder()
                 .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
             val customTabsIntent = builder.build()
 
-            context.setPreference(tempServer, server)
-            context.setPreference(tempClientId, clientId)
-            context.setPreference(tempClientSecret, clientSecret)
+            context.setPreferences(
+                tempServer to server,
+                tempClientId to clientId,
+                tempClientSecret to clientSecret,
+            )
 
             customTabsIntent.launchUrl(context, Uri.parse(url))
         }
     }
 
-    fun registerCode() {
-
-    }
-
-    private suspend fun loginRequest(appUrl: String, requestData: String) = suspendCoroutine { c ->
-        val body = requestData.toRequestBody(CONTENT_TYPE)
+    private suspend fun postRequest(uri: Uri, requestBody: Map<String, String>) = suspendCoroutine { c ->
+        val body = (requestBody.map { (key, value) -> "$key=${URLEncoder.encode(value, "utf-8")}" }.joinToString("&"))
+        Timber.d("Making POST request to: $uri. Body: $body")
         val request = Request.Builder()
-            .url("$appUrl/oauth/token".also { Timber.d("Request: $it") })
+            .url(uri.toString())
             .addHeader("Content-Type", "application/x-www-form-urlencoded")
-            .post(body)
+            .post(body.toRequestBody(CONTENT_TYPE))
             .build()
         httpClient
             .newCall(request)
             .enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    c.resume(response.body?.string())
-                }
+                override fun onResponse(call: Call, response: Response) { c.resume(response.body!!.string()) }
+                override fun onFailure(call: Call, e: IOException) { c.resumeWithException(e) }
+            })
+    }
 
-                override fun onFailure(call: Call, e: IOException) {
-                    c.resumeWithException(e)
-                }
+    private suspend fun getRequest(uri: Uri, headers: Map<String, String>) = suspendCoroutine { c ->
+        Timber.d("Making GET request to: $uri. Headers: $headers")
+        val request = Request.Builder()
+            .url(uri.toString())
+            .addHeader("User-Agent", "${BuildConfig.APPLICATION_ID}/${BuildConfig.VERSION_NAME}")
+            .addHeader("Accept", "*/*")
+            .apply { headers.toList().forEach { (k, v) -> addHeader(k, v) } }
+            .get()
+            .build()
+        httpClient
+            .newCall(request)
+            .enqueue(object : Callback {
+                override fun onResponse(call: Call, response: Response) { c.resume(response.body!!.string()) }
+                override fun onFailure(call: Call, e: IOException) { c.resumeWithException(e) }
             })
     }
 }

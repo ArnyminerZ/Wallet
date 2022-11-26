@@ -16,13 +16,19 @@
     <string name="title_scan_code">Scan QR Code</string>
     <string name="title_server_configuration">Server Configuration</string>
     
-    <string name="login_username">Username</string>
+    <string name="login_email">Email</string>
     <string name="login_password">Password</string>
     <string name="login_server">Server</string>
     <string name="login_server_hint">Server</string>
     <string name="login_oauth_client_id">OAuth Client ID</string>
     <string name="login_oauth_client_secret">OAuth Client Secret</string>
-    <string name="login_action">Action</string>
+    <string name="login_authorise">Authorise</string>
+    <string name="login_cancel">Cancel</string>
+    <string name="login_server_new">New Server</string>
+    <string name="login_action">Login</string>
+
+    <string name="account_adding_title">Adding Account…</string>
+    <string name="account_adding_message">Your account is being added, please, don\'t close the app until the process completes.</string>
 
     <string name="error_invalid_code">Invalid QR Code</string>
 
@@ -32,4 +38,6 @@
 
     <string name="image_desc_close">Close</string>
     <string name="image_desc_scan_qr">Scan QR</string>
+    <string name="image_desc_display_password">Display Password</string>
+    <string name="image_desc_hide_password">Hide Password</string>
 </resources>

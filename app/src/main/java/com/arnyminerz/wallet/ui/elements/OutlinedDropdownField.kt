@@ -18,6 +18,7 @@ fun <K: Any> OutlinedDropdownField(
     modifier: Modifier = Modifier,
     placeholder: String? = null,
     label: String? = null,
+    enabled: Boolean = true,
 ) {
     Box(modifier = modifier) {
         var expanded by remember { mutableStateOf(false) }
@@ -29,7 +30,7 @@ fun <K: Any> OutlinedDropdownField(
             enabled = false,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { expanded = !expanded },
+                .clickable(enabled = enabled) { expanded = !expanded },
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 disabledBorderColor = if (expanded)
                     MaterialTheme.colorScheme.primary
