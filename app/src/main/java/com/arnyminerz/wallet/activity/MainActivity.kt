@@ -1,4 +1,4 @@
-package com.arnyminerz.wallet
+package com.arnyminerz.wallet.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
