@@ -29,8 +29,8 @@ fun ServerConfigurationPage() {
     var fieldsEnabled by remember { mutableStateOf(true) }
 
     var server by remember { mutableStateOf("https://firefly.arnyminerz.com") }
-    var clientId by remember { mutableStateOf("2") }
-    var clientSecret by remember { mutableStateOf("-") }
+    var clientId by remember { mutableStateOf("12") }
+    var clientSecret by remember { mutableStateOf("XaozykURC7MqjyuYwZ39iecZ1PbGhkhzlPnet54d") }
 
     Column {
         OutlinedTextField(
@@ -73,6 +73,7 @@ fun ServerConfigurationPage() {
                 doAsync {
                     Timber.i("Trying to log in...")
                     val ah = AccountHelper.getInstance(context)
+                    ah.authoriseClient(context, clientId, clientSecret)
                     // val t = ah.login(username, password, server, clientId, clientSecret)
                     // Timber.i("Token: $t")
 

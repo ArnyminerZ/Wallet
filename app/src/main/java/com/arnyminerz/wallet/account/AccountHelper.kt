@@ -5,10 +5,17 @@ import android.accounts.AccountManager
 import android.accounts.AccountManagerCallback
 import android.accounts.AccountManagerFuture
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.WorkerThread
+import androidx.browser.customtabs.CustomTabColorSchemeParams
+import androidx.browser.customtabs.CustomTabsCallback
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsServiceConnection
 import com.arnyminerz.wallet.BuildConfig
 import com.arnyminerz.wallet.utils.getParcelableCompat
 import kotlinx.coroutines.runBlocking
@@ -122,6 +129,19 @@ class AccountHelper private constructor(context: Context) {
 
         val requestData = "grant_type=password&username=$username&password=$password"
         return loginRequest(serverUrl, requestData)
+    }
+
+    /**
+     * Requests the server authorisation to use the OAuth client.
+     * @author Arnau Mora
+     * @since 20221126
+     */
+    fun authoriseClient(context: Context, clientId: String, clientSecret: String) {
+        val url = "http://firefly.arnyminerz.com/oauth/authorize?client_id=$clientId&client_secret=$clientSecret&redirect_uri=app://com.arnyminerz.wallet&response_type=code"
+        val builder = CustomTabsIntent.Builder()
+            .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
+        val customTabsIntent = builder.build()
+        customTabsIntent.launchUrl(context, Uri.parse(url))
     }
 
     private suspend fun loginRequest(appUrl: String, requestData: String) = suspendCoroutine { c ->

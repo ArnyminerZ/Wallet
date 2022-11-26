@@ -15,6 +15,14 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <queries>
+        <!-- For custom tabs -->
+        <intent>
+            <action android:name=
+                "android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -28,7 +36,7 @@
         android:theme="@style/Theme.Material3.DayNight.NoActionBar"
         tools:ignore="UnusedAttribute">
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,6 +46,17 @@
         </activity>
         <activity
             android:name=".scanner.ScannerActivity" />
+        <activity
+            android:name=".activity.DeepLinkHandler"
+            android:exported="true">
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="app" android:host="com.arnyminerz.wallet" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
