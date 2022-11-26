@@ -37,6 +37,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.LifecycleOwner
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.ui.theme.WalletTheme
+import com.arnyminerz.wallet.ui.theme.setContentThemed
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -64,93 +65,91 @@ class ScannerActivity : AppCompatActivity(), BarcodeCallback {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        setContent {
-            WalletTheme {
-                val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
-                val scope = rememberCoroutineScope()
+        setContentThemed {
+            val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
+            val scope = rememberCoroutineScope()
 
-                val lifecycleOwner = LocalLifecycleOwner.current
+            val lifecycleOwner = LocalLifecycleOwner.current
 
-                val onBackRequested: () -> Unit = {
-                    setResult(RESULT_CANCELED)
-                    finish()
+            val onBackRequested: () -> Unit = {
+                setResult(RESULT_CANCELED)
+                finish()
+            }
+            BackHandler(onBack = onBackRequested)
+
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        navigationIcon = {
+                            IconButton(onClick = onBackRequested) {
+                                Icon(Icons.Rounded.Close, stringResource(R.string.image_desc_close))
+                            }
+                        },
+                        title = { Text(text = stringResource(R.string.title_scan_code)) },
+                    )
                 }
-                BackHandler(onBack = onBackRequested)
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                ) {
+                    AnimatedVisibility(
+                        visible = !permissionState.status.isGranted,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth(.8f),
+                    ) {
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.permission_camera_title),
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp),
+                            )
+                            Text(
+                                text = stringResource(R.string.permission_camera_message),
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 4.dp),
+                            )
+                            OutlinedButton(
+                                onClick = { scope.launch { permissionState.launchPermissionRequest() } },
+                                modifier = Modifier
+                                    .align(Alignment.End)
+                                    .padding(horizontal = 8.dp),
+                            ) { Text(stringResource(R.string.permission_grant)) }
+                        }
+                    }
 
-                Scaffold(
-                    topBar = {
-                        CenterAlignedTopAppBar(
-                            navigationIcon = {
-                                IconButton(onClick = onBackRequested) {
-                                    Icon(Icons.Rounded.Close, stringResource(R.string.image_desc_close))
+                    if (permissionState.status.isGranted) {
+                        val previewView: PreviewView = remember { PreviewView(this@ScannerActivity) }
+
+                        val squares = remember { mutableStateListOf<Rect>() }
+
+                        LaunchedEffect(previewView) {
+                            startCamera(previewView, lifecycleOwner, squares)
+                        }
+
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .zIndex(1f),
+                            onDraw = {
+                                squares.forEach { qrRect ->
+                                    val position = Offset(qrRect.top, qrRect.left)
+                                    val size = Size(qrRect.width, qrRect.height)
+
+                                    drawRoundRect(Color.Red, position, size, CornerRadius(10f, 10f), style = Stroke(width = 5f))
                                 }
                             },
-                            title = { Text(text = stringResource(R.string.title_scan_code)) },
                         )
-                    }
-                ) { paddingValues ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                    ) {
-                        AnimatedVisibility(
-                            visible = !permissionState.status.isGranted,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth(.8f),
-                        ) {
-                            ElevatedCard(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.permission_camera_title),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp),
-                                )
-                                Text(
-                                    text = stringResource(R.string.permission_camera_message),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 4.dp),
-                                )
-                                OutlinedButton(
-                                    onClick = { scope.launch { permissionState.launchPermissionRequest() } },
-                                    modifier = Modifier
-                                        .align(Alignment.End)
-                                        .padding(horizontal = 8.dp),
-                                ) { Text(stringResource(R.string.permission_grant)) }
-                            }
-                        }
 
-                        if (permissionState.status.isGranted) {
-                            val previewView: PreviewView = remember { PreviewView(this@ScannerActivity) }
-
-                            val squares = remember { mutableStateListOf<Rect>() }
-
-                            LaunchedEffect(previewView) {
-                                startCamera(previewView, lifecycleOwner, squares)
-                            }
-
-                            Canvas(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .zIndex(1f),
-                                onDraw = {
-                                    squares.forEach { qrRect ->
-                                        val position = Offset(qrRect.top, qrRect.left)
-                                        val size = Size(qrRect.width, qrRect.height)
-
-                                        drawRoundRect(Color.Red, position, size, CornerRadius(10f, 10f), style = Stroke(width = 5f))
-                                    }
-                                },
-                            )
-
-                            AndroidView(
-                                factory = { previewView },
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
+                        AndroidView(
+                            factory = { previewView },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
                 }
             }

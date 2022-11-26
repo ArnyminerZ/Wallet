@@ -23,14 +23,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Wallet"
         android:name=".App"
         android:enableOnBackInvokedCallback="true"
+        android:theme="@style/Theme.Material3.DayNight.NoActionBar"
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Wallet">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -32,6 +33,7 @@ import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.arnyminerz.wallet.ui.screens.LoginScreen
 import com.arnyminerz.wallet.ui.screens.MainScreen
 import com.arnyminerz.wallet.ui.theme.WalletTheme
+import com.arnyminerz.wallet.ui.theme.setContentThemed
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -41,15 +43,13 @@ import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val mainViewModel by viewModels<MainViewModel>()
 
     private val picker =
         registerForActivityResult(ActivityResultContracts.GetContent()) {
-            mainViewModel.loadPkPass(
-                it
-            )
+            mainViewModel.loadPkPass(it)
         }
 
     @OptIn(
@@ -59,74 +59,72 @@ class MainActivity : ComponentActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            WalletTheme {
-                val navController = rememberAnimatedNavController()
+        setContentThemed {
+            val navController = rememberAnimatedNavController()
 
-                AnimatedNavHost(navController = navController, startDestination = "Home") {
-                    composable(
-                        "Home",
-                        enterTransition = {
-                            when (initialState.destination.route) {
-                                "Red" ->
-                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
-                                else -> null
-                            }
-                        },
-                        exitTransition = {
-                            when (targetState.destination.route) {
-                                "Red" ->
-                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
-                                else -> null
-                            }
-                        },
-                        popEnterTransition = {
-                            when (initialState.destination.route) {
-                                "Red" ->
-                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
-                                else -> null
-                            }
-                        },
-                        popExitTransition = {
-                            when (targetState.destination.route) {
-                                "Red" ->
-                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
-                                else -> null
-                            }
+            AnimatedNavHost(navController = navController, startDestination = "Home") {
+                composable(
+                    "Home",
+                    enterTransition = {
+                        when (initialState.destination.route) {
+                            "Red" ->
+                                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                            else -> null
                         }
-                    ) { MainScreen(mainViewModel, picker, navController) }
-                    composable(
-                        "AddAccount",
-                        enterTransition = {
-                            when (initialState.destination.route) {
-                                "Red" ->
-                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
-                                else -> null
-                            }
-                        },
-                        exitTransition = {
-                            when (targetState.destination.route) {
-                                "Red" ->
-                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
-                                else -> null
-                            }
-                        },
-                        popEnterTransition = {
-                            when (initialState.destination.route) {
-                                "Red" ->
-                                    slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
-                                else -> null
-                            }
-                        },
-                        popExitTransition = {
-                            when (targetState.destination.route) {
-                                "Red" ->
-                                    slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
-                                else -> null
-                            }
+                    },
+                    exitTransition = {
+                        when (targetState.destination.route) {
+                            "Red" ->
+                                slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                            else -> null
                         }
-                    ) { LoginScreen() }
-                }
+                    },
+                    popEnterTransition = {
+                        when (initialState.destination.route) {
+                            "Red" ->
+                                slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                            else -> null
+                        }
+                    },
+                    popExitTransition = {
+                        when (targetState.destination.route) {
+                            "Red" ->
+                                slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                            else -> null
+                        }
+                    }
+                ) { MainScreen(mainViewModel, picker, navController) }
+                composable(
+                    "AddAccount",
+                    enterTransition = {
+                        when (initialState.destination.route) {
+                            "Red" ->
+                                slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                            else -> null
+                        }
+                    },
+                    exitTransition = {
+                        when (targetState.destination.route) {
+                            "Red" ->
+                                slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                            else -> null
+                        }
+                    },
+                    popEnterTransition = {
+                        when (initialState.destination.route) {
+                            "Red" ->
+                                slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                            else -> null
+                        }
+                    },
+                    popExitTransition = {
+                        when (targetState.destination.route) {
+                            "Red" ->
+                                slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700))
+                            else -> null
+                        }
+                    }
+                ) { LoginScreen() }
             }
         }
     }
