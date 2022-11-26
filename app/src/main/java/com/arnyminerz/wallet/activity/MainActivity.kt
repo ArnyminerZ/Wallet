@@ -2,6 +2,7 @@ package com.arnyminerz.wallet.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -29,11 +30,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.arnyminerz.wallet.model.MainViewModel
+import com.arnyminerz.wallet.storage.tempClientId
+import com.arnyminerz.wallet.storage.tempClientSecret
+import com.arnyminerz.wallet.storage.tempServer
 import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.arnyminerz.wallet.ui.screens.LoginScreen
 import com.arnyminerz.wallet.ui.screens.MainScreen
 import com.arnyminerz.wallet.ui.theme.WalletTheme
 import com.arnyminerz.wallet.ui.theme.setContentThemed
+import com.arnyminerz.wallet.utils.doAsync
+import com.arnyminerz.wallet.utils.popPreference
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -44,6 +50,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        const val EXTRA_LOGIN_PAGE = "login_page"
+    }
 
     private val mainViewModel by viewModels<MainViewModel>()
 
@@ -59,10 +68,15 @@ class MainActivity : AppCompatActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val loginPage = intent.extras?.getInt(EXTRA_LOGIN_PAGE)
+
         setContentThemed {
             val navController = rememberAnimatedNavController()
 
-            AnimatedNavHost(navController = navController, startDestination = "Home") {
+            BackHandler { finishAffinity() }
+
+            AnimatedNavHost(navController = navController, startDestination = if (loginPage != null) "AddAccount" else "Home") {
                 composable(
                     "Home",
                     enterTransition = {
@@ -124,8 +138,18 @@ class MainActivity : AppCompatActivity() {
                             else -> null
                         }
                     }
-                ) { LoginScreen() }
+                ) { LoginScreen(loginPage ?: 0) }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        doAsync {
+            popPreference(tempServer)
+            popPreference(tempClientId)
+            popPreference(tempClientSecret)
         }
     }
 }

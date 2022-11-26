@@ -4,19 +4,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.account.AccountHelper
+import com.arnyminerz.wallet.storage.tempClientId
+import com.arnyminerz.wallet.storage.tempClientSecret
+import com.arnyminerz.wallet.storage.tempServer
 import com.arnyminerz.wallet.utils.doAsync
 import com.arnyminerz.wallet.utils.ui
 import timber.log.Timber
@@ -33,6 +34,15 @@ fun ServerConfigurationPage() {
     var clientSecret by remember { mutableStateOf("XaozykURC7MqjyuYwZ39iecZ1PbGhkhzlPnet54d") }
 
     Column {
+        Text(
+            text = stringResource(R.string.title_server_configuration),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+            style = MaterialTheme.typography.titleLarge,
+        )
+
         OutlinedTextField(
             value = server,
             onValueChange = { server = it },
@@ -73,7 +83,7 @@ fun ServerConfigurationPage() {
                 doAsync {
                     Timber.i("Trying to log in...")
                     val ah = AccountHelper.getInstance(context)
-                    ah.authoriseClient(context, clientId, clientSecret)
+                    ah.authoriseClient(context, server, clientId, clientSecret)
                     // val t = ah.login(username, password, server, clientId, clientSecret)
                     // Timber.i("Token: $t")
 

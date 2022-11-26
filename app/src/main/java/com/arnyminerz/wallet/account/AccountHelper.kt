@@ -17,7 +17,13 @@ import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import com.arnyminerz.wallet.BuildConfig
+import com.arnyminerz.wallet.storage.tempClientId
+import com.arnyminerz.wallet.storage.tempClientSecret
+import com.arnyminerz.wallet.storage.tempServer
 import com.arnyminerz.wallet.utils.getParcelableCompat
+import com.arnyminerz.wallet.utils.setPreference
+import com.arnyminerz.wallet.utils.toast
+import com.arnyminerz.wallet.utils.ui
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
@@ -136,12 +142,29 @@ class AccountHelper private constructor(context: Context) {
      * @author Arnau Mora
      * @since 20221126
      */
-    fun authoriseClient(context: Context, clientId: String, clientSecret: String) {
-        val url = "http://firefly.arnyminerz.com/oauth/authorize?client_id=$clientId&client_secret=$clientSecret&redirect_uri=app://com.arnyminerz.wallet&response_type=code"
-        val builder = CustomTabsIntent.Builder()
-            .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
-        val customTabsIntent = builder.build()
-        customTabsIntent.launchUrl(context, Uri.parse(url))
+    @WorkerThread
+    suspend fun authoriseClient(context: Context, server: String, clientId: String, clientSecret: String) {
+        val authCode = AuthCode(server, clientId, clientSecret, null)
+        val authCodes = context.getAuthCodes()
+        if (authCodes.find { it == authCode } != null) {
+            // Code already authorised
+            ui { context.toast("Already authed") }
+        } else {
+            val url = "$server/oauth/authorize?client_id=$clientId&client_secret=$clientSecret&redirect_uri=app://com.arnyminerz.wallet&response_type=code"
+            val builder = CustomTabsIntent.Builder()
+                .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
+            val customTabsIntent = builder.build()
+
+            context.setPreference(tempServer, server)
+            context.setPreference(tempClientId, clientId)
+            context.setPreference(tempClientSecret, clientSecret)
+
+            customTabsIntent.launchUrl(context, Uri.parse(url))
+        }
+    }
+
+    fun registerCode() {
+
     }
 
     private suspend fun loginRequest(appUrl: String, requestData: String) = suspendCoroutine { c ->
