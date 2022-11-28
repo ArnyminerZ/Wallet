@@ -31,8 +31,7 @@ class AccountAuthenticator(context: Context) : AbstractAccountAuthenticator(cont
     override fun editProperties(response: AccountAuthenticatorResponse?, accountType: String?): Bundle? = null
 
     override fun getAuthToken(response: AccountAuthenticatorResponse, account: Account, authTokenType: String, options: Bundle?): Bundle {
-        var authToken = am.peekAuthToken(account, authTokenType)
-
+        val authToken = am.peekAuthToken(account, authTokenType)
         if (authToken?.isEmpty() == false)
             return Bundle().apply {
                 putString(AccountManager.KEY_ACCOUNT_NAME, account.name)
