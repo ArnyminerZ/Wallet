@@ -18,6 +18,9 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        buildConfigField "String", "ACCOUNT_TYPE", '"firefly"'
+        resValue "string", "ACCOUNT_TYPE", "firefly"
     }
 
     buildTypes {

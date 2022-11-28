@@ -8,6 +8,11 @@ import android.os.Bundle
 import androidx.annotation.WorkerThread
 import androidx.browser.customtabs.CustomTabsIntent
 import com.arnyminerz.wallet.BuildConfig
+import com.arnyminerz.wallet.exception.HttpClientException
+import com.arnyminerz.wallet.exception.HttpRedirectException
+import com.arnyminerz.wallet.exception.HttpResponseException
+import com.arnyminerz.wallet.exception.HttpServerException
+import com.arnyminerz.wallet.network.interceptor.AuthHeaderInterceptor
 import com.arnyminerz.wallet.storage.authCodes
 import com.arnyminerz.wallet.storage.tempClientId
 import com.arnyminerz.wallet.storage.tempClientSecret
@@ -56,22 +61,24 @@ class AccountHelper private constructor(context: Context) {
         accessToken: String,
         refreshToken: String,
     ) {
+        httpClient = httpClient.newBuilder()
+            .addInterceptor(AuthHeaderInterceptor(tokenType, accessToken))
+            .build()
+
         val url = URL(authCode.server)
         val rawAccountInfo = getRequest(
             Uri.Builder()
                 .authority(url.authority)
                 .scheme(url.protocol)
                 .path("/api/v1/about/user")
-            .build(),
-            mapOf(
-                "Authorization" to "$tokenType $accessToken",
-            )
+                .build(),
+            emptyMap(),
         )
         Timber.w("Account info: $rawAccountInfo")
         val accountInfoResponse = JSONObject(rawAccountInfo)
         val accountInfo = FireflyAccount.fromFireflyData(accountInfoResponse.getJSONObject("data"))
 
-        val account = Account(accountInfo.email, BuildConfig.APPLICATION_ID)
+        val account = Account(accountInfo.email, BuildConfig.ACCOUNT_TYPE)
         am.addAccountExplicitly(account, authCode.clientSecret, Bundle())
         am.setUserData(account, "token_type", tokenType)
         am.setUserData(account, "refresh_token", refreshToken)
@@ -79,7 +86,7 @@ class AccountHelper private constructor(context: Context) {
         am.setUserData(account, "client_id", authCode.clientId)
         am.setUserData(account, "client_secret", authCode.clientSecret)
         am.setUserData(account, "code", authCode.code)
-        am.setAuthToken(account, "firefly", accessToken)
+        am.setAuthToken(account, BuildConfig.ACCOUNT_TYPE, accessToken)
     }
 
     @WorkerThread
@@ -166,25 +173,67 @@ class AccountHelper private constructor(context: Context) {
         httpClient
             .newCall(request)
             .enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) { c.resume(response.body!!.string()) }
-                override fun onFailure(call: Call, e: IOException) { c.resumeWithException(e) }
+                override fun onResponse(call: Call, response: Response) {
+                    c.resume(response.body!!.string())
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    c.resumeWithException(e)
+                }
             })
     }
 
+    /**
+     * Makes a POST request to the server. Take into account that [httpClient] is used, and might have interceptors that override the headers given.
+     * @author Arnau Mora
+     * @since 20221128
+     * @param uri The url to make the request to.
+     * @param headers The headers to add to the request.
+     */
     private suspend fun getRequest(uri: Uri, headers: Map<String, String>) = suspendCoroutine { c ->
         Timber.d("Making GET request to: $uri. Headers: $headers")
         val request = Request.Builder()
             .url(uri.toString())
             .addHeader("User-Agent", "${BuildConfig.APPLICATION_ID}/${BuildConfig.VERSION_NAME}")
-            .addHeader("Accept", "*/*")
+            .addHeader("Accept", "application/json")
+            .addHeader("Content-Type", "application/vnd.api+json")
             .apply { headers.toList().forEach { (k, v) -> addHeader(k, v) } }
-            .get()
+            .method("GET", null)
             .build()
         httpClient
             .newCall(request)
             .enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) { c.resume(response.body!!.string()) }
-                override fun onFailure(call: Call, e: IOException) { c.resumeWithException(e) }
+                override fun onResponse(call: Call, response: Response) {
+                    when (response.code) {
+                        in 200..299 -> c.resume(response.body!!.string())
+                        in 300..399 -> c.resumeWithException(
+                            HttpRedirectException(
+                                "Request returned a non-success code.",
+                                response.code,
+                                response.body,
+                            )
+                        )
+                        in 400..499 -> c.resumeWithException(
+                            HttpClientException(
+                                "Request returned a non-success code.",
+                                response.code,
+                                response.body,
+                            )
+                        )
+                        in 500..599 -> c.resumeWithException(
+                            HttpServerException(
+                                "Request returned a non-success code.",
+                                response.code,
+                                response.body,
+                            )
+                        )
+                        else -> c.resumeWithException(HttpResponseException("Request returned a non-success code (${response.code})", response.code, response.body))
+                    }
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    c.resumeWithException(e)
+                }
             })
     }
 }

@@ -16,11 +16,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.account.AccountHelper
 import com.arnyminerz.wallet.account.AuthCode
@@ -29,23 +31,40 @@ import com.arnyminerz.wallet.storage.authCodes
 import com.arnyminerz.wallet.storage.tempClientId
 import com.arnyminerz.wallet.storage.tempClientSecret
 import com.arnyminerz.wallet.storage.tempServer
+import com.arnyminerz.wallet.ui.screens.AddingAccountScreen
 import com.arnyminerz.wallet.ui.screens.LoginScreen
 import com.arnyminerz.wallet.ui.screens.MainScreen
+import com.arnyminerz.wallet.ui.screens.PAGE_MONEY
 import com.arnyminerz.wallet.ui.theme.setContentThemed
 import com.arnyminerz.wallet.utils.doAsync
 import com.arnyminerz.wallet.utils.getPreference
 import com.arnyminerz.wallet.utils.popPreference
+import com.arnyminerz.wallet.utils.ui
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.flow.first
 import org.json.JSONObject
 import timber.log.Timber
 
+@OptIn(
+    ExperimentalPagerApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalAnimationApi::class,
+    ExperimentalComposeUiApi::class,
+)
 class MainActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_ACCOUNT_INDEX = "account_index"
+
+        const val EXTRA_ADDING_NEW_ACCOUNT = "adding_new_account"
+
+        private const val SCREEN_HOME = "Home"
+        private const val SCREEN_ADD_ACCOUNT = "AddAccount"
+        private const val SCREEN_NEW_ACCOUNT = "NewAccount"
     }
 
     private lateinit var ah: AccountHelper
@@ -59,71 +78,53 @@ class MainActivity : AppCompatActivity() {
             mainViewModel.loadPkPass(it)
         }
 
-    @OptIn(
-        ExperimentalPagerApi::class,
-        ExperimentalMaterial3Api::class,
-        ExperimentalAnimationApi::class,
-        ExperimentalComposeUiApi::class,
-    )
+    private lateinit var navController: NavHostController
+
+    private lateinit var mainPagerState: PagerState
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         ah = AccountHelper.getInstance(this)
 
         accountIndex = intent.extras?.getInt(EXTRA_ACCOUNT_INDEX, -1) ?: -1
+        val addingNewAccount = intent.extras?.getBoolean(EXTRA_ADDING_NEW_ACCOUNT, false) ?: false
 
         setContentThemed {
-            val navController = rememberAnimatedNavController()
+            navController = rememberAnimatedNavController()
+            mainPagerState = rememberPagerState()
 
             BackHandler { finishAffinity() }
 
-            AnimatedNavHost(navController = navController, startDestination = if (accountIndex > 0) "NewAccount" else "Home") {
+            AnimatedNavHost(
+                navController = navController,
+                startDestination = when {
+                    addingNewAccount -> SCREEN_ADD_ACCOUNT
+                    accountIndex > 0 -> SCREEN_NEW_ACCOUNT
+                    else -> SCREEN_HOME
+                },
+            ) {
                 composable(
-                    "Home",
+                    SCREEN_HOME,
                     enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                     popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
-                ) { MainScreen(mainViewModel, picker, navController) }
+                ) { MainScreen(mainViewModel, picker, navController, mainPagerState) }
                 composable(
-                    "AddAccount",
+                    SCREEN_ADD_ACCOUNT,
                     enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                     popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                 ) { LoginScreen() }
                 composable(
-                    "NewAccount",
+                    SCREEN_NEW_ACCOUNT,
                     enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                     popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .align(Alignment.Center),
-                        ) {
-                            Text(
-                                stringResource(R.string.account_adding_title),
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                stringResource(R.string.account_adding_message),
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                style = MaterialTheme.typography.labelMedium,
-                            )
-                        }
-                    }
-                }
+                ) { AddingAccountScreen() }
             }
         }
     }
@@ -131,23 +132,24 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        if (accountIndex > 0) doAsync {
+        val job = if (accountIndex > 0) doAsync {
             val authCodes = (getPreference(authCodes).first() ?: emptySet()).toList()
             val authCode = JSONObject(authCodes[accountIndex])
                 .let { AuthCode.fromJson(it) }
             Timber.i("Registering new account...")
             ah.login(authCode)
-            Timber.i("New account added.")
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        doAsync {
-            popPreference(tempServer)
-            popPreference(tempClientId)
-            popPreference(tempClientSecret)
+            Timber.i("New account added. Updating UI...")
+            ui {
+                navController.navigate(SCREEN_HOME)
+                mainPagerState.animateScrollToPage(PAGE_MONEY)
+            }
+        } else doAsync {  }
+        job.invokeOnCompletion {
+            doAsync {
+                popPreference(tempServer)
+                popPreference(tempClientId)
+                popPreference(tempClientSecret)
+            }
         }
     }
 }

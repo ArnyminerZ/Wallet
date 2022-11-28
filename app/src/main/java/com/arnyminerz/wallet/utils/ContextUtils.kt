@@ -134,6 +134,8 @@ suspend fun <T: JsonSerializable> Context.addToPreference(key: Preferences.Key<S
         entries.addAll(values.toList().map { it.toJson().toString() })
         setPreference(key, entries)
         size
+    }.also {
+        Timber.d("Stored preferences at ${key.name}.")
     }
 
 /**
@@ -167,4 +169,7 @@ fun Context.toast(@StringRes textRes: Int, @ToastDuration duration: Int = Toast.
  * @param options Some options to apply to the launch intent. Adding extras, for example.
  */
 @UiThread
-fun <A: Activity> Context.launch(activity: KClass<A>, options: Intent.() -> Unit = {}) = startActivity(Intent(this, activity.java).apply(options))
+fun <A: Activity> Context.launch(activity: KClass<A>, options: Intent.() -> Unit = {}) =
+    startActivity(Intent(this, activity.java).apply(options).also {
+        Timber.v("Launching activity ${activity.simpleName}. Extras: ${it.extras?.toMap() ?: "<none>"}")
+    })

@@ -18,3 +18,11 @@ fun <T: Parcelable> Bundle.getParcelableCompat(key: String, kClass: KClass<T>): 
         getParcelable(key, kClass.java)
     else
         getParcelable(key)
+
+/**
+ * Converts the given [Bundle] into a Map.
+ * @author Arnau Mora
+ * @since 20221122
+ */
+@Suppress("DEPRECATION")
+fun Bundle.toMap(): Map<String, Any?> = keySet().associateWith { get(it) }

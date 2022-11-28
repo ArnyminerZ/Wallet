@@ -30,12 +30,14 @@ class DeepLinkHandler : AppCompatActivity() {
                 val index = addToPreference(authCodes, authCode)
 
                 ui {
+                    Timber.d("New account index: $index. Launching MainActivity...")
                     launch(MainActivity::class) {
                         putExtra(MainActivity.EXTRA_ACCOUNT_INDEX, index)
                     }
                 }
             } else ui {
                 // TODO: Localize
+                Timber.e("There isn't any stored temporal values. Launching MainActivity without action.")
                 toast("")
                 launch(MainActivity::class)
             }

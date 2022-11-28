@@ -21,15 +21,18 @@ import com.arnyminerz.wallet.model.MainViewModel
 import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+const val PAGE_PASSES = 0
+const val PAGE_MONEY = 1
+
+@Composable
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
-@Composable
-fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: ActivityResultLauncher<String>? = null, navController: NavController? = null) {
-    val pagerState = rememberPagerState()
+fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: ActivityResultLauncher<String>? = null, navController: NavController? = null, pagerState: PagerState) {
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -37,10 +40,10 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: Activit
             BottomAppBar(
                 actions = {
                     IconButton(
-                        onClick = { scope.launch { pagerState.scrollToPage(0) } },
+                        onClick = { scope.launch { pagerState.scrollToPage(PAGE_PASSES) } },
                     ) {
                         Icon(
-                            imageVector = if (pagerState.currentPage == 0)
+                            imageVector = if (pagerState.currentPage == PAGE_PASSES)
                                 Icons.Rounded.List
                             else
                                 Icons.Outlined.List,
@@ -48,10 +51,10 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: Activit
                         )
                     }
                     IconButton(
-                        onClick = { scope.launch { pagerState.scrollToPage(1) } },
+                        onClick = { scope.launch { pagerState.scrollToPage(PAGE_MONEY) } },
                     ) {
                         Icon(
-                            imageVector = if (pagerState.currentPage == 1)
+                            imageVector = if (pagerState.currentPage == PAGE_MONEY)
                                 Icons.Rounded.Cloud
                             else
                                 Icons.Outlined.Cloud,
@@ -78,11 +81,11 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: Activit
             modifier = Modifier.padding(paddingValues),
         ) { page ->
             when(page) {
-                0 -> if (mainViewModel.pass != null) {
+                PAGE_PASSES -> if (mainViewModel.pass != null) {
                     Timber.i("Loading pass...")
                     PassViewer(pass = mainViewModel.pass!!)
                 } else Timber.i("Bitmap and/or barcode are null.")
-                1 -> Column {
+                PAGE_MONEY -> Column {
                     Button(
                         onClick = {
                             navController?.navigate("AddAccount")

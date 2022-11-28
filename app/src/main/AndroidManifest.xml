@@ -57,6 +57,20 @@
                 <data android:scheme="app" android:host="com.arnyminerz.wallet" />
             </intent-filter>
         </activity>
+
+        <!-- Custom authenticator -->
+        <service
+            android:name=".account.AuthenticatorService"
+            android:exported="true"
+            android:permission="android.permission.AUTHENTICATE_ACCOUNTS">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
     </application>
 
 </manifest>
