@@ -4,7 +4,13 @@ import android.graphics.Color
 import android.os.Build
 import androidx.annotation.ColorInt
 import com.arnyminerz.wallet.pkpass.data.Field
+import com.arnyminerz.wallet.utils.serializer.FireflyJsonSerializer
+import com.arnyminerz.wallet.utils.serializer.JsonSerializer
+import com.arnyminerz.wallet.utils.serializer.serialize
+import org.json.JSONException
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @ColorInt
 fun JSONObject.getColor(key: String): Int {
@@ -81,4 +87,40 @@ fun JSONObject.getFields(key: String): List<Field> {
         )
     }
     return fields
+}
+
+fun <T: Any> JSONObject.getSerializable(key: String, serializer: JsonSerializer<T>) =
+    getJSONObject(key).serialize(serializer)
+
+fun <T: Any> JSONObject.serializeInline(serializer: JsonSerializer<T>) = serialize(serializer)
+
+fun <T: Any> JSONObject.serializeInline(serializer: FireflyJsonSerializer<T>, prefix: String) = serialize(serializer, prefix)
+
+fun JSONObject.getDate(key: String, formatter: SimpleDateFormat): Date? =
+    getString(key).let { formatter.parse(it) }
+
+fun JSONObject.getStringArray(key: String) = getJSONArray(key).let { arr ->
+    (0 until arr.length()).map { arr.getString(it) }
+}
+
+fun JSONObject.getStringOrNull(key: String): String? = key.takeIf { has(it) && !isNull(it) }?.let { getString(it) }
+
+fun JSONObject.getDoubleOrNull(key: String): Double? = key.takeIf { has(it) && !isNull(it) }?.let { getDouble(it) }
+
+fun JSONObject.getLongOrNull(key: String): Long? = key.takeIf { has(it) && !isNull(it) }?.let { getLong(it) }
+
+fun <T: Any> JSONObject.getSerializableOrNull(key: String, serializer: JsonSerializer<T>): T? = key.takeIf { has(it) && !isNull(it) }?.let { getSerializable(it, serializer) }
+
+fun JSONObject.getDateOrNull(key: String, formatter: SimpleDateFormat): Date? = key.takeIf { has(it) && !isNull(it) }?.let { getDate(it, formatter) }
+
+fun <T: Any> JSONObject.serializeInlineOrNull(serializer: JsonSerializer<T>): T? = try {
+    serializeInline(serializer)
+} catch (e: JSONException) {
+    null
+}
+
+fun <T: Any> JSONObject.serializeInlineOrNull(serializer: FireflyJsonSerializer<T>, prefix: String): T? = try {
+    serializeInline(serializer, prefix)
+} catch (e: JSONException) {
+    null
 }

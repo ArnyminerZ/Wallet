@@ -2,12 +2,20 @@ package com.arnyminerz.wallet.account
 
 import android.accounts.Account
 import android.accounts.AccountManager
+import android.accounts.AuthenticatorException
+import android.accounts.OnAccountsUpdateListener
+import android.accounts.OperationCanceledException
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import androidx.annotation.MainThread
 import androidx.annotation.WorkerThread
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.arnyminerz.wallet.BuildConfig
+import com.arnyminerz.wallet.data.remote.FireflyRequestData
 import com.arnyminerz.wallet.exception.HttpClientException
 import com.arnyminerz.wallet.exception.HttpRedirectException
 import com.arnyminerz.wallet.exception.HttpResponseException
@@ -35,7 +43,7 @@ import kotlin.coroutines.suspendCoroutine
 
 val CONTENT_TYPE = "application/x-www-form-urlencoded".toMediaType()
 
-class AccountHelper private constructor(context: Context) {
+class AccountHelper private constructor(context: Context): OnAccountsUpdateListener {
     companion object {
         @Volatile
         private var INSTANCE: AccountHelper? = null
@@ -53,6 +61,32 @@ class AccountHelper private constructor(context: Context) {
 
     val accounts: Array<out Account>
         get() = am.getAccountsByType(BuildConfig.APPLICATION_ID)
+
+    val accountsLive = MutableLiveData<Array<out Account>>(emptyArray())
+
+    override fun onAccountsUpdated(accounts: Array<out Account>?) {
+        accounts?.let { accountsLive.postValue(it) }
+    }
+
+    /**
+     * Should be called by the application. Starts listening for updates for the [accountsLive] [LiveData].
+     * @author Arnau Mora
+     * @since 20221128
+     */
+    @MainThread
+    fun startListeningForAccounts(handler: Handler) {
+        am.addOnAccountsUpdatedListener(this, handler, true)
+    }
+
+    /**
+     * Should be called when the application is being destroyed. Stops updating [accountsLive].
+     * @author Arnau Mora
+     * @since 20221128
+     */
+    @MainThread
+    fun stopListeningForAccounts() {
+        am.removeOnAccountsUpdatedListener(this)
+    }
 
     @WorkerThread
     suspend fun addAccount(
@@ -160,6 +194,55 @@ class AccountHelper private constructor(context: Context) {
 
             customTabsIntent.launchUrl(context, Uri.parse(url))
         }
+    }
+
+    /**
+     * Gets the AuthToken for the given accounts.
+     * @author Arnau Mora
+     * @since 20221128
+     * @return An instance of [FireflyRequestData].
+     * @throws AuthenticatorException When there was an issue with the authenticator,.
+     * @throws OperationCanceledException When the operation has been cancelled externally for any reason.
+     * @throws IOException Any exception related with IO, normally network issues.
+     */
+    @Throws(
+        IOException::class,
+        AuthenticatorException::class,
+        OperationCanceledException::class,
+    )
+    @WorkerThread
+    fun getFireflyRequestData(account: Account): FireflyRequestData {
+        val server = am.getUserData(account, "server")
+        val tokenType = am.getUserData(account, "token_type")
+        val token = am.blockingGetAuthToken(account, BuildConfig.ACCOUNT_TYPE, true)
+        return FireflyRequestData(server, tokenType, token)
+    }
+
+    /**
+     * Makes a GET request to the desired endpoint.
+     * @author Arnau Mora
+     * @since 20221128
+     * @param endpoint The endpoint to make the request to. Must start with "/", matches the contents after "/api/v1".
+     * @param requestData Data for authorising the request.
+     * @param queryParameters Some parameters to append to the query.
+     * @see getFireflyRequestData
+     */
+    @WorkerThread
+    suspend fun getEndpoint(endpoint: String, requestData: FireflyRequestData, queryParameters: Map<String, String> = emptyMap()): String {
+        httpClient = httpClient.newBuilder()
+            .addInterceptor(AuthHeaderInterceptor(requestData.authTokenType, requestData.authToken))
+            .build()
+
+        val url = URL(requestData.server)
+        return getRequest(
+            Uri.Builder()
+                .authority(url.authority)
+                .scheme(url.protocol)
+                .path("/api/v1$endpoint")
+                .apply { queryParameters.forEach { (k, v) -> appendQueryParameter(k, v) } }
+                .build(),
+            emptyMap(),
+        )
     }
 
     private suspend fun postRequest(uri: Uri, requestBody: Map<String, String>) = suspendCoroutine { c ->

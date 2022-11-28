@@ -36,6 +36,12 @@
     <string name="permission_camera_message">It\'s required to have the camera permission to launch the scanner.</string>
     <string name="permission_grant">Grant</string>
 
+    <string name="dashboard_month_balance">Month\'s Balance</string>
+    <string name="dashboard_month_spent">Month\'s Spent</string>
+    <string name="dashboard_month_earned">Month\'s Earned</string>
+    <string name="dashboard_month_left">Month\'s Left to Spend</string>
+    <string name="dashboard_month_net">Month\'s Net Worth</string>
+
     <string name="image_desc_close">Close</string>
     <string name="image_desc_scan_qr">Scan QR</string>
     <string name="image_desc_display_password">Display Password</string>
