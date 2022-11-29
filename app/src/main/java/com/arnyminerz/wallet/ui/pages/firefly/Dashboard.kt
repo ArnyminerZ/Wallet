@@ -22,6 +22,7 @@ import com.arnyminerz.wallet.ui.elements.SummaryEntry
 fun FireflyDashboard(viewModel: MainViewModel = viewModel(), account: Account) {
     val summary by remember { viewModel.getSummary(account) }.observeAsState()
     val transactions by remember { viewModel.getTransactions(account, 7) }.observeAsState()
+    val accounts by remember { viewModel.getAccounts(account, 7) }.observeAsState()
 
     Column {
         summary?.let { sum ->

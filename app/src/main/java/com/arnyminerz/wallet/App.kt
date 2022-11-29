@@ -4,6 +4,9 @@ import android.app.Application
 import android.os.Handler
 import androidx.core.os.HandlerCompat
 import com.arnyminerz.wallet.account.AccountHelper
+import com.arnyminerz.wallet.data.remote.DatabaseSynchronizer
+import com.arnyminerz.wallet.data.remote.api
+import com.arnyminerz.wallet.utils.doAsync
 import timber.log.Timber
 
 class App : Application() {
@@ -18,6 +21,11 @@ class App : Application() {
 
         ah = AccountHelper.getInstance(this)
         ah.startListeningForAccounts(HandlerCompat.createAsync(mainLooper))
+        ah.addListener { accounts ->
+            doAsync {
+                accounts.forEach { DatabaseSynchronizer(this@App, it.api(this@App)).synchronizeAccounts() }
+            }
+        }
     }
 
     override fun onTerminate() {

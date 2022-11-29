@@ -113,8 +113,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
     fun getTransactions(account: Account, limit: Int = Int.MAX_VALUE) = future {
-            account.api(getApplication()).getTransactions(limit).also {
-                postValue(it)
-            }
+        account.api(getApplication()).getTransactions(limit).also { postValue(it) }
+    }
+
+    fun getAccounts(account: Account, limit: Int = Int.MAX_VALUE) = future {
+        account.api(getApplication()).getAccounts(limit).also {
+            Timber.i("Accounts: ${it.map { j -> j.toString() }}")
+            postValue(it)
         }
+    }
 }

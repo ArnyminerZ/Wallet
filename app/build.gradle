@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -38,6 +39,9 @@ android {
     }
     buildFeatures {
         compose true
+    }
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas".toString())
     }
     composeOptions {
         kotlinCompilerExtensionVersion "$compose_compiler_version"
@@ -99,10 +103,15 @@ dependencies {
     // Custom Tabs
     implementation "androidx.browser:browser:1.4.0"
 
+    // CameraX
     implementation "androidx.camera:camera-camera2:$camerax_version"
     implementation "androidx.camera:camera-lifecycle:$camerax_version"
     implementation "androidx.camera:camera-view:$camerax_version"
     implementation "androidx.camera:camera-extensions:$camerax_version"
+
+    // Jetpack Room
+    implementation "androidx.room:room-runtime:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'

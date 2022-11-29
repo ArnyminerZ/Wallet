@@ -64,8 +64,13 @@ class AccountHelper private constructor(context: Context): OnAccountsUpdateListe
 
     val accountsLive = MutableLiveData<Array<out Account>>(emptyArray())
 
+    private val accountsListener = arrayListOf<(accounts: Array<out Account>) -> Unit>()
+
     override fun onAccountsUpdated(accounts: Array<out Account>?) {
-        accounts?.let { accountsLive.postValue(it) }
+        accounts?.let { list ->
+            accountsLive.postValue(list)
+            accountsListener.forEach { it(list) }
+        }
     }
 
     /**
@@ -80,12 +85,18 @@ class AccountHelper private constructor(context: Context): OnAccountsUpdateListe
 
     /**
      * Should be called when the application is being destroyed. Stops updating [accountsLive].
+     * Also removes all listeners added with [addListener].
      * @author Arnau Mora
      * @since 20221128
      */
     @MainThread
     fun stopListeningForAccounts() {
         am.removeOnAccountsUpdatedListener(this)
+        accountsListener.clear()
+    }
+
+    fun addListener(@MainThread listener: (accounts: (Array<out  Account>)) -> Unit) {
+        accountsListener.add(listener)
     }
 
     @WorkerThread

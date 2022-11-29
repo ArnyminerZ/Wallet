@@ -4,6 +4,7 @@ import android.accounts.Account
 import android.content.Context
 import androidx.annotation.WorkerThread
 import com.arnyminerz.wallet.account.AccountHelper
+import com.arnyminerz.wallet.data.`object`.FireflyAccount
 import com.arnyminerz.wallet.data.`object`.FireflySummary
 import com.arnyminerz.wallet.data.`object`.FireflyTransaction
 import com.arnyminerz.wallet.utils.asJSONObjects
@@ -116,8 +117,25 @@ class FireflyApi(context: Context, private val account: Account) {
                 .map { FireflyTransaction.fromJson(it, "") }
         }.flatten()
 
-        return builder.subList(0, min(builder.size, limit))
-    }
+    /**
+     * Gets a list of accounts.
+     * @author Arnau Mora
+     * @since 20221129
+     * @param limit The maximum amount of transactions to get.
+     * @throws NullPointerException If the response doesn't contain the required fields.
+     * @throws JSONException If there's an error while parsing the JSON response.
+     */
+    @Throws(
+        JSONException::class,
+        NullPointerException::class,
+    )
+    @WorkerThread
+    suspend fun getAccounts(limit: Int = Int.MAX_VALUE): List<FireflyAccount> =
+        getWithPages(
+            "/accounts",
+            emptyMap(),
+            limit,
+        ).map { FireflyAccount.fromJson(it, "") }
 }
 
 fun Account.api(context: Context) = FireflyApi(context, this)
