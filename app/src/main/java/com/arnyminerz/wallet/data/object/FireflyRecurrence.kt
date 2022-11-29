@@ -18,7 +18,7 @@ data class FireflyRecurrence(
     }
 
     override val toJson: JSONObject.() -> Unit = {
-        put("recurrence_", id)
+        put("recurrence_id", id)
         put("recurrence_total", total)
         put("recurrence_count", count)
     }

@@ -7,6 +7,7 @@ import com.arnyminerz.wallet.pkpass.data.Field
 import com.arnyminerz.wallet.utils.serializer.FireflyJsonSerializer
 import com.arnyminerz.wallet.utils.serializer.JsonSerializer
 import com.arnyminerz.wallet.utils.serializer.serialize
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -89,12 +90,12 @@ fun JSONObject.getFields(key: String): List<Field> {
     return fields
 }
 
-fun <T: Any> JSONObject.getSerializable(key: String, serializer: JsonSerializer<T>) =
+fun <T : Any> JSONObject.getSerializable(key: String, serializer: JsonSerializer<T>) =
     getJSONObject(key).serialize(serializer)
 
-fun <T: Any> JSONObject.serializeInline(serializer: JsonSerializer<T>) = serialize(serializer)
+fun <T : Any> JSONObject.serializeInline(serializer: JsonSerializer<T>) = serialize(serializer)
 
-fun <T: Any> JSONObject.serializeInline(serializer: FireflyJsonSerializer<T>, prefix: String) = serialize(serializer, prefix)
+fun <T : Any> JSONObject.serializeInline(serializer: FireflyJsonSerializer<T>, prefix: String) = serialize(serializer, prefix)
 
 fun JSONObject.getDate(key: String, formatter: SimpleDateFormat): Date? =
     getString(key).let { formatter.parse(it) }
@@ -109,18 +110,28 @@ fun JSONObject.getDoubleOrNull(key: String): Double? = key.takeIf { has(it) && !
 
 fun JSONObject.getLongOrNull(key: String): Long? = key.takeIf { has(it) && !isNull(it) }?.let { getLong(it) }
 
-fun <T: Any> JSONObject.getSerializableOrNull(key: String, serializer: JsonSerializer<T>): T? = key.takeIf { has(it) && !isNull(it) }?.let { getSerializable(it, serializer) }
+fun <T : Any> JSONObject.getSerializableOrNull(key: String, serializer: JsonSerializer<T>): T? =
+    key.takeIf { has(it) && !isNull(it) }?.let { getSerializable(it, serializer) }
 
 fun JSONObject.getDateOrNull(key: String, formatter: SimpleDateFormat): Date? = key.takeIf { has(it) && !isNull(it) }?.let { getDate(it, formatter) }
 
-fun <T: Any> JSONObject.serializeInlineOrNull(serializer: JsonSerializer<T>): T? = try {
+fun <T : Any> JSONObject.serializeInlineOrNull(serializer: JsonSerializer<T>): T? = try {
     serializeInline(serializer)
 } catch (e: JSONException) {
     null
 }
 
-fun <T: Any> JSONObject.serializeInlineOrNull(serializer: FireflyJsonSerializer<T>, prefix: String): T? = try {
+fun <T : Any> JSONObject.serializeInlineOrNull(serializer: FireflyJsonSerializer<T>, prefix: String): T? = try {
     serializeInline(serializer, prefix)
 } catch (e: JSONException) {
     null
 }
+
+/**
+ * Maps all the values of the array into [JSONObject].
+ * @author Arnau Mora
+ * @since 20221129
+ * @throws JSONException If a value is not a [JSONObject].
+ */
+val JSONArray.asJSONObjects: List<JSONObject>
+    get() = (0 until length()).map { getJSONObject(it) }

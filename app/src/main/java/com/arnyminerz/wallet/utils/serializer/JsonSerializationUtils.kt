@@ -1,6 +1,9 @@
 package com.arnyminerz.wallet.utils.serializer
 
+import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Serializes the JSONObject using the given serializer.
@@ -18,4 +21,8 @@ fun <T, S: JsonSerializer<T>> JSONObject.serialize(serializer: S) = serializer.f
  */
 fun <T, S: FireflyJsonSerializer<T>> JSONObject.serialize(serializer: S, prefix: String) = serializer.fromJson(this, prefix)
 
-fun JSONObject.putSerializable(key: String, serializable: JsonSerializable) = put(key, serializable.toJson())
+fun <S: JsonSerializable> JSONObject.putSerializable(key: String, serializable: S?): JSONObject = put(key, serializable?.toJson())
+
+fun <T, C: Collection<T>> JSONObject.putArray(key: String, collection: C): JSONObject = put(key, JSONArray(collection))
+
+fun JSONObject.putDate(key: String, date: Date?, formatter: SimpleDateFormat): JSONObject = put(key, date?.let { formatter.format(it) })
