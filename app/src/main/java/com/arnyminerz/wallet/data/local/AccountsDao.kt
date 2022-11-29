@@ -1,5 +1,6 @@
 package com.arnyminerz.wallet.data.local
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -20,4 +21,7 @@ interface AccountsDao {
 
     @Delete
     fun deleteAll(vararg account: FireflyAccount)
+
+    @Query("SELECT * FROM ff_accounts")
+    fun getAllLive(): LiveData<List<FireflyAccount>>
 }

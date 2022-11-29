@@ -33,4 +33,6 @@ data class FireflyCurrency(
         put("currency_symbol", symbol)
         put("currency_decimal_places", decimalPlaces)
     }
+
+    fun format(amount: Double) = "%.${decimalPlaces}f $symbol".format(amount)
 }

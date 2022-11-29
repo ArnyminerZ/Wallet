@@ -70,4 +70,72 @@ data class FireflyAccount(
             )
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as FireflyAccount
+
+        if (id != other.id) return false
+        if (createdAt != other.createdAt) return false
+        if (active != other.active) return false
+        if (order != other.order) return false
+        if (name != other.name) return false
+        if (type != other.type) return false
+        if (role != other.role) return false
+        if (currency != other.currency) return false
+        if (balance != other.balance) return false
+        if (balanceDate != other.balanceDate) return false
+        if (notes != other.notes) return false
+        if (monthlyPaymentDate != other.monthlyPaymentDate) return false
+        if (creditCardType != other.creditCardType) return false
+        if (accountNumber != other.accountNumber) return false
+        if (iban != other.iban) return false
+        if (bic != other.bic) return false
+        if (virtualBalance != other.virtualBalance) return false
+        if (openingBalance != other.openingBalance) return false
+        if (openingBalanceDate != other.openingBalanceDate) return false
+        if (liabilityType != other.liabilityType) return false
+        if (liabilityDirection != other.liabilityDirection) return false
+        if (interest != other.interest) return false
+        if (interestPeriod != other.interestPeriod) return false
+        if (currentDebt != other.currentDebt) return false
+        if (includeNetWorth != other.includeNetWorth) return false
+        if (geoRef != other.geoRef) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + createdAt.hashCode()
+        result = 31 * result + active.hashCode()
+        result = 31 * result + (order?.hashCode() ?: 0)
+        result = 31 * result + name.hashCode()
+        result = 31 * result + type.hashCode()
+        result = 31 * result + (role?.hashCode() ?: 0)
+        result = 31 * result + currency.hashCode()
+        result = 31 * result + balance.hashCode()
+        result = 31 * result + balanceDate.hashCode()
+        result = 31 * result + (notes?.hashCode() ?: 0)
+        result = 31 * result + (monthlyPaymentDate?.hashCode() ?: 0)
+        result = 31 * result + (creditCardType?.hashCode() ?: 0)
+        result = 31 * result + (accountNumber?.hashCode() ?: 0)
+        result = 31 * result + (iban?.hashCode() ?: 0)
+        result = 31 * result + (bic?.hashCode() ?: 0)
+        result = 31 * result + (virtualBalance?.hashCode() ?: 0)
+        result = 31 * result + (openingBalance?.hashCode() ?: 0)
+        result = 31 * result + (openingBalanceDate?.hashCode() ?: 0)
+        result = 31 * result + (liabilityType?.hashCode() ?: 0)
+        result = 31 * result + (liabilityDirection?.hashCode() ?: 0)
+        result = 31 * result + (interest?.hashCode() ?: 0)
+        result = 31 * result + (interestPeriod?.hashCode() ?: 0)
+        result = 31 * result + (currentDebt?.hashCode() ?: 0)
+        result = 31 * result + includeNetWorth.hashCode()
+        result = 31 * result + (geoRef?.hashCode() ?: 0)
+        return result
+    }
+
+
 }

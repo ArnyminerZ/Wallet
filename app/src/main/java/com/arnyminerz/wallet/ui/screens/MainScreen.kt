@@ -4,6 +4,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.List
@@ -36,7 +38,12 @@ const val PAGE_MONEY = 1
 @Composable
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
-fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: ActivityResultLauncher<String>? = null, navController: NavController? = null, pagerState: PagerState) {
+fun MainScreen(
+    mainViewModel: MainViewModel = viewModel(),
+    pkPassPicker: ActivityResultLauncher<String>? = null,
+    navController: NavController? = null,
+    pagerState: PagerState
+) {
     val scope = rememberCoroutineScope()
     val accounts by mainViewModel.accounts.observeAsState(emptyArray())
 
@@ -85,18 +92,14 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel(), pkPassPicker: Activit
             state = pagerState,
             modifier = Modifier.padding(paddingValues),
         ) { page ->
-            when(page) {
+            when (page) {
                 PAGE_PASSES -> if (mainViewModel.pass != null) {
                     Timber.i("Loading pass...")
                     PassViewer(pass = mainViewModel.pass!!)
                 } else Timber.i("Bitmap and/or barcode are null.")
-                PAGE_MONEY -> Column {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                    ) {
-
-                    }
+                PAGE_MONEY -> Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                ) {
                     Button(
                         onClick = {
                             navController?.navigate("AddAccount")

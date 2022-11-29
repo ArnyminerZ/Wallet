@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import com.arnyminerz.wallet.account.AccountHelper
 import com.arnyminerz.wallet.data.`object`.FireflySummary
+import com.arnyminerz.wallet.data.local.AppDatabase
 import com.arnyminerz.wallet.data.remote.api
 import com.arnyminerz.wallet.pkpass.Parser
 import com.arnyminerz.wallet.pkpass.data.Pass
@@ -40,7 +41,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     private val ah = AccountHelper.getInstance(application)
 
+    private val database = AppDatabase.getInstance(application)
+
+    private val accountsDao = database.accountsDao()
+
     val accounts = ah.accountsLive
+
+    val storedAccounts = accountsDao.getAllLive()
 
     /**
      * Loads a pkpass from the response uri from a file picker.
@@ -114,12 +121,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getTransactions(account: Account, limit: Int = Int.MAX_VALUE) = future {
         account.api(getApplication()).getTransactions(limit).also { postValue(it) }
-    }
-
-    fun getAccounts(account: Account, limit: Int = Int.MAX_VALUE) = future {
-        account.api(getApplication()).getAccounts(limit).also {
-            Timber.i("Accounts: ${it.map { j -> j.toString() }}")
-            postValue(it)
-        }
     }
 }

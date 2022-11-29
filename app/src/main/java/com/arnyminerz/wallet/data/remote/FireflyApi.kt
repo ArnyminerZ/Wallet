@@ -20,6 +20,8 @@ private val SHORT_DATE: SimpleDateFormat
 class FireflyApi(context: Context, private val account: Account) {
     private val ah = AccountHelper.getInstance(context)
 
+    internal val accountName = account.name
+
     @WorkerThread
     @Throws(JSONException::class)
     private suspend fun get(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =

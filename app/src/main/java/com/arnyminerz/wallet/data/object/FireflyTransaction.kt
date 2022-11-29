@@ -113,7 +113,7 @@ data class FireflyTransaction(
      * @author Arnau Mora
      * @since 20221128
      */
-    val amountString: String = "%.${currency.decimalPlaces}f ${currency.symbol}".format(amount)
+    val amountString: String = currency.format(amount)
 
     override val toJson: JSONObject.() -> Unit = {
         put("user", user)

@@ -95,9 +95,14 @@ class AccountHelper private constructor(context: Context): OnAccountsUpdateListe
         accountsListener.clear()
     }
 
-    fun addListener(@MainThread listener: (accounts: (Array<out  Account>)) -> Unit) {
-        accountsListener.add(listener)
-    }
+    /**
+     * Adds a new listener, that will be called whenever accounts are updated.
+     * @author Arnau Mora
+     * @since 20221129
+     * @param listener The block of code to run when the accounts are updated.
+     * @return If the new listener has been added successfully.
+     */
+    fun addListener(@MainThread listener: (accounts: (Array<out  Account>)) -> Unit) = accountsListener.add(listener)
 
     @WorkerThread
     suspend fun addAccount(
