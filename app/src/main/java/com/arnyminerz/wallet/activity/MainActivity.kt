@@ -110,7 +110,12 @@ class MainActivity : AppCompatActivity() {
             ) {
                 composable(
                     SCREEN_HOME,
-                    enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
+                    enterTransition = {
+                        when (initialState.destination.route) {
+                            SCREEN_NEW_TRANSACTION -> null
+                            else -> slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                        }
+                    },
                     exitTransition = {
                         when (targetState.destination.route) {
                             SCREEN_NEW_TRANSACTION -> null
