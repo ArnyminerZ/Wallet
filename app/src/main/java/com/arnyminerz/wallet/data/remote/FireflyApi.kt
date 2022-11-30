@@ -5,11 +5,13 @@ import android.content.Context
 import androidx.annotation.WorkerThread
 import com.arnyminerz.wallet.account.AccountHelper
 import com.arnyminerz.wallet.data.`object`.FireflyAccount
+import com.arnyminerz.wallet.data.`object`.FireflyCurrency
 import com.arnyminerz.wallet.data.`object`.FireflySummary
 import com.arnyminerz.wallet.data.`object`.FireflyTransaction
 import com.arnyminerz.wallet.utils.asJSONObjects
 import org.json.JSONException
 import org.json.JSONObject
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.min
@@ -138,6 +140,30 @@ class FireflyApi(context: Context, private val account: Account) {
             emptyMap(),
             limit,
         ).map { FireflyAccount.fromJson(it, "") }
+
+    /**
+     * Gets a list of currencies from the server.
+     * @author Arnau Mora
+     * @since 20221129
+     * @param limit The maximum amount of transactions to get.
+     * @throws NullPointerException If the response doesn't contain the required fields.
+     * @throws JSONException If there's an error while parsing the JSON response.
+     */
+    @Throws(
+        JSONException::class,
+        NullPointerException::class,
+    )
+    @WorkerThread
+    suspend fun getCurrencies(limit: Int = Int.MAX_VALUE): List<FireflyCurrency> =
+        getWithPages(
+            "/currencies",
+            emptyMap(),
+            limit,
+        ).map { json ->
+            val attrs = json.getJSONObject("attributes")
+            attrs.put("id", json.getString("id"))
+            FireflyCurrency.fromJson(attrs)
+        }
 }
 
 fun Account.api(context: Context) = FireflyApi(context, this)

@@ -52,6 +52,11 @@
     <string name="new_transaction_field_amount">Amount</string>
     <string name="new_transaction_action_save">Save</string>
 
+    <string name="currency_dialog_title">Currencies</string>
+    <string name="currency_dialog_default">Default</string>
+
+    <string name="dialog_close">Close</string>
+
     <string name="image_desc_close">Close</string>
     <string name="image_desc_scan_qr">Scan QR</string>
     <string name="image_desc_display_password">Display Password</string>

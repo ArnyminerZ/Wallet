@@ -23,7 +23,13 @@ class App : Application() {
         ah.startListeningForAccounts(HandlerCompat.createAsync(mainLooper))
         ah.addListener { accounts ->
             doAsync {
-                accounts.forEach { DatabaseSynchronizer(this@App, it.api(this@App)).synchronizeAccounts() }
+                Timber.i("Got ${accounts.size} accounts. Synchronizing data...")
+                accounts.forEach {
+                    Timber.d("Synchronizing data for \"${it.name}\"")
+                    DatabaseSynchronizer(this@App, it.api(this@App))
+                        .synchronizeAccounts()
+                        .synchronizeCurrencies()
+                }
             }
         }
     }

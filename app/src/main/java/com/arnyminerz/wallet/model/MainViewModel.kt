@@ -44,10 +44,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getInstance(application)
 
     private val accountsDao = database.accountsDao()
+    private val currenciesDao = database.currenciesDao()
 
     val accounts = ah.accountsLive
 
     val storedAccounts = accountsDao.getAllLive()
+
+    val storedCurrencies = currenciesDao.getAllLive()
 
     /**
      * Loads a pkpass from the response uri from a file picker.

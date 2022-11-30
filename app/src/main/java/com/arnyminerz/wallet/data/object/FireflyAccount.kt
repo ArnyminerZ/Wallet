@@ -1,9 +1,13 @@
 package com.arnyminerz.wallet.data.`object`
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.arnyminerz.wallet.utils.*
 import com.arnyminerz.wallet.utils.serializer.FireflyJsonSerializer
+import com.arnyminerz.wallet.utils.serializer.JsonSerializer
+import com.arnyminerz.wallet.utils.serializer.putDate
+import com.arnyminerz.wallet.utils.serializer.putSerializable
 import org.json.JSONObject
 import java.util.*
 
@@ -11,7 +15,7 @@ import java.util.*
     tableName = "ff_accounts"
 )
 data class FireflyAccount(
-    @PrimaryKey val id: Long,
+    @PrimaryKey override val id: Long,
     val createdAt: Date,
     val active: Boolean,
     val order: Long?,
@@ -37,20 +41,20 @@ data class FireflyAccount(
     val currentDebt: String?,
     val includeNetWorth: Boolean,
     val geoRef: FireflyGeoRef?,
-) {
-    companion object: FireflyJsonSerializer<FireflyAccount> {
+) : FireflyObject(id) {
+    companion object : FireflyJsonSerializer<FireflyAccount>, JsonSerializer<FireflyAccount> {
         override fun fromJson(json: JSONObject, prefix: String): FireflyAccount = json.getJSONObject("attributes").let { attrs ->
             FireflyAccount(
                 json.getLong("id"),
-                attrs.getDate("created_at", FIREFLY_DATE_FORMATTER)!!,
+                attrs.getDate("created_at", FIREFLY_DATE_FORMATTER),
                 attrs.getBoolean("active"),
                 attrs.getLongOrNull("order"),
                 attrs.getString("name"),
                 attrs.getString("type"),
                 attrs.getStringOrNull("role"),
-                attrs.serializeInline(FireflyCurrency.Companion),
+                attrs.serializeInline(FireflyCurrency.Companion, "currency"),
                 attrs.getDouble("current_balance"),
-                attrs.getDate("current_balance_date", FIREFLY_DATE_FORMATTER)!!,
+                attrs.getDate("current_balance_date", FIREFLY_DATE_FORMATTER),
                 attrs.getStringOrNull("notes"),
                 attrs.getDateOrNull("monthly_payment_date", FIREFLY_DATE_FORMATTER),
                 attrs.getStringOrNull("credit_card_type"),
@@ -69,6 +73,65 @@ data class FireflyAccount(
                 attrs.serializeInlineOrNull(FireflyGeoRef.Companion),
             )
         }
+
+        override fun fromJson(json: JSONObject): FireflyAccount = FireflyAccount(
+            json.getLong("id"),
+            json.getDate("created_at", FIREFLY_SHORT_DATE),
+            json.getBoolean("active"),
+            json.getLongOrNull("order"),
+            json.getString("name"),
+            json.getString("type"),
+            json.getStringOrNull("role"),
+            json.getSerializable("currency", FireflyCurrency.Companion),
+            json.getDouble("balance"),
+            json.getDate("balance_date", FIREFLY_SHORT_DATE),
+            json.getStringOrNull("notes"),
+            json.getDateOrNull("monthly_payment_date", FIREFLY_SHORT_DATE),
+            json.getStringOrNull("credit_card_type"),
+            json.getStringOrNull("account_number"),
+            json.getStringOrNull("iban"),
+            json.getStringOrNull("bic"),
+            json.getDoubleOrNull("virtual_balance"),
+            json.getDouble("opening_balance"),
+            json.getDateOrNull("opening_balance_date", FIREFLY_SHORT_DATE),
+            json.getStringOrNull("liability_type"),
+            json.getStringOrNull("liability_direction"),
+            json.getDoubleOrNull("interest"),
+            json.getStringOrNull("interest_period"),
+            json.getStringOrNull("current_debt"),
+            json.getBoolean("include_net_worth"),
+            json.getSerializableOrNull("geo_ref", FireflyGeoRef.Companion),
+        )
+    }
+
+    @Ignore
+    override val toJson: JSONObject.() -> Unit = {
+        put("id", id)
+        putDate("created_at", createdAt, FIREFLY_SHORT_DATE)
+        put("active", active)
+        put("order", order)
+        put("name", name)
+        put("type", type)
+        put("role", role)
+        putSerializable("currency", currency)
+        put("balance", balance)
+        putDate("balance_date", balanceDate, FIREFLY_SHORT_DATE)
+        put("notes", notes)
+        putDate("monthly_payment_date", monthlyPaymentDate, FIREFLY_SHORT_DATE)
+        put("credit_card_type", creditCardType)
+        put("account_number", accountNumber)
+        put("iban", iban)
+        put("bic", bic)
+        put("virtual_balance", virtualBalance)
+        put("opening_balance", openingBalance)
+        putDate("opening_balance_date", openingBalanceDate, FIREFLY_SHORT_DATE)
+        put("liability_type", liabilityType)
+        put("liability_direction", liabilityDirection)
+        put("interest", interest)
+        put("interest_period", interestPeriod)
+        put("current_debt", currentDebt)
+        put("include_net_worth", includeNetWorth)
+        putSerializable("geo_ref", geoRef)
     }
 
     override fun equals(other: Any?): Boolean {

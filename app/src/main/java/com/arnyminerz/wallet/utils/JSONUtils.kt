@@ -97,8 +97,8 @@ fun <T : Any> JSONObject.serializeInline(serializer: JsonSerializer<T>) = serial
 
 fun <T : Any> JSONObject.serializeInline(serializer: FireflyJsonSerializer<T>, prefix: String) = serialize(serializer, prefix)
 
-fun JSONObject.getDate(key: String, formatter: SimpleDateFormat): Date? =
-    getString(key).let { formatter.parse(it) }
+fun JSONObject.getDate(key: String, formatter: SimpleDateFormat): Date =
+    getString(key).let { formatter.parse(it)!! }
 
 fun JSONObject.getStringArray(key: String) = getJSONArray(key).let { arr ->
     (0 until arr.length()).map { arr.getString(it) }
@@ -113,7 +113,9 @@ fun JSONObject.getLongOrNull(key: String): Long? = key.takeIf { has(it) && !isNu
 fun <T : Any> JSONObject.getSerializableOrNull(key: String, serializer: JsonSerializer<T>): T? =
     key.takeIf { has(it) && !isNull(it) }?.let { getSerializable(it, serializer) }
 
-fun JSONObject.getDateOrNull(key: String, formatter: SimpleDateFormat): Date? = key.takeIf { has(it) && !isNull(it) }?.let { getDate(it, formatter) }
+fun JSONObject.getDateOrNull(key: String, formatter: SimpleDateFormat): Date? = key
+    .takeIf { has(it) && !isNull(it) }
+    ?.let { getString(key).let { formatter.parse(it)!! } }
 
 fun <T : Any> JSONObject.serializeInlineOrNull(serializer: JsonSerializer<T>): T? = try {
     serializeInline(serializer)

@@ -43,7 +43,7 @@ import kotlin.coroutines.suspendCoroutine
 
 val CONTENT_TYPE = "application/x-www-form-urlencoded".toMediaType()
 
-class AccountHelper private constructor(context: Context): OnAccountsUpdateListener {
+class AccountHelper private constructor(context: Context) : OnAccountsUpdateListener {
     companion object {
         @Volatile
         private var INSTANCE: AccountHelper? = null
@@ -60,17 +60,21 @@ class AccountHelper private constructor(context: Context): OnAccountsUpdateListe
         .build()
 
     val accounts: Array<out Account>
-        get() = am.getAccountsByType(BuildConfig.APPLICATION_ID)
+        get() = am.getAccountsByType(BuildConfig.ACCOUNT_TYPE)
 
     val accountsLive = MutableLiveData<Array<out Account>>(emptyArray())
 
     private val accountsListener = arrayListOf<(accounts: Array<out Account>) -> Unit>()
 
     override fun onAccountsUpdated(accounts: Array<out Account>?) {
-        accounts?.let { list ->
-            accountsLive.postValue(list)
-            accountsListener.forEach { it(list) }
-        }
+        accounts
+            ?.onEach { Timber.i("Accounts: ${it.name} (${it.type})") }
+            ?.filter { it.type == BuildConfig.ACCOUNT_TYPE }
+            ?.toTypedArray()
+            ?.let { list ->
+                accountsLive.postValue(list)
+                accountsListener.forEach { it(list) }
+            }
     }
 
     /**
@@ -102,7 +106,7 @@ class AccountHelper private constructor(context: Context): OnAccountsUpdateListe
      * @param listener The block of code to run when the accounts are updated.
      * @return If the new listener has been added successfully.
      */
-    fun addListener(@MainThread listener: (accounts: (Array<out  Account>)) -> Unit) = accountsListener.add(listener)
+    fun addListener(@MainThread listener: (accounts: (Array<out Account>)) -> Unit) = accountsListener.add(listener)
 
     @WorkerThread
     suspend fun addAccount(
@@ -326,7 +330,13 @@ class AccountHelper private constructor(context: Context): OnAccountsUpdateListe
                                 response.body,
                             )
                         )
-                        else -> c.resumeWithException(HttpResponseException("Request returned a non-success code (${response.code})", response.code, response.body))
+                        else -> c.resumeWithException(
+                            HttpResponseException(
+                                "Request returned a non-success code (${response.code})",
+                                response.code,
+                                response.body
+                            )
+                        )
                     }
                 }
 

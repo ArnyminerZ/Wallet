@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -43,7 +44,9 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
 
@@ -80,6 +83,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mainPagerState: PagerState
 
+    private lateinit var coroutineScope: CoroutineScope
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -91,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         setContentThemed {
             navController = rememberAnimatedNavController()
             mainPagerState = rememberPagerState()
+            coroutineScope = rememberCoroutineScope()
 
             BackHandler { finishAffinity() }
 
@@ -105,7 +111,12 @@ class MainActivity : AppCompatActivity() {
                 composable(
                     SCREEN_HOME,
                     enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
-                    exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
+                    exitTransition = {
+                        when (targetState.destination.route) {
+                            SCREEN_NEW_TRANSACTION -> null
+                            else -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700))
+                        }
+                    },
                     popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                     popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                 ) { MainScreen(mainViewModel, picker, navController, mainPagerState) }
@@ -125,17 +136,17 @@ class MainActivity : AppCompatActivity() {
                 ) { AddingAccountScreen() }
                 composable(
                     SCREEN_NEW_TRANSACTION,
-                    enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
-                    exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
-                    popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
-                    popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
-                ) { NewTransactionScreen() }
+                    enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(700)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(700)) },
+                    popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up, animationSpec = tween(700)) },
+                    popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down, animationSpec = tween(700)) },
+                ) { NewTransactionScreen(mainViewModel) { navController.navigate(SCREEN_HOME) } }
             }
         }
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
 
         val job = if (accountIndex > 0) doAsync {
             val authCodes = (getPreference(authCodes).first() ?: emptySet()).toList()
@@ -144,11 +155,12 @@ class MainActivity : AppCompatActivity() {
             Timber.i("Registering new account...")
             ah.login(authCode)
             Timber.i("New account added. Updating UI...")
-            ui {
+            coroutineScope.launch {
                 navController.navigate(SCREEN_HOME)
                 mainPagerState.animateScrollToPage(PAGE_MONEY)
             }
-        } else doAsync {  }
+            accountIndex = -1
+        } else doAsync { }
         job.invokeOnCompletion {
             doAsync {
                 popPreference(tempServer)

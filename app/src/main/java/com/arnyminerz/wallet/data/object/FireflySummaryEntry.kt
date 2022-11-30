@@ -44,19 +44,20 @@ data class FireflySummaryEntry(
                     "EUR",
                     "€",
                     2,
+                    true,
                 ),
                 MetadataOptions.Balance,
             )
 
         fun fromSummaryJson(json: JSONObject, metadata: Metadata) = FireflySummaryEntry(
             json.getDouble("monetary_value"),
-            FireflyCurrency.fromJson(json),
+            FireflyCurrency.fromJson(json, "currency"),
             metadata,
         )
 
         override fun fromJson(json: JSONObject): FireflySummaryEntry = FireflySummaryEntry(
             json.getDouble("value"),
-            json.getJSONObject("currency").serialize(FireflyCurrency.Companion),
+            json.getJSONObject("currency").serialize(FireflyCurrency.Companion, "currency"),
             json.getLong("metadata_id").let { MetadataOptions.valueOf(it) },
         )
     }

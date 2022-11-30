@@ -9,19 +9,19 @@ import androidx.room.Update
 import com.arnyminerz.wallet.data.`object`.FireflyAccount
 
 @Dao
-interface AccountsDao {
+interface AccountsDao: FireflyDao<FireflyAccount> {
     @Query("SELECT * FROM ff_accounts")
-    fun getAll(): List<FireflyAccount>
+    override fun getAll(): List<FireflyAccount>
 
     @Insert
-    fun addAll(vararg accounts: FireflyAccount)
+    override fun addAll(vararg values: FireflyAccount)
 
     @Update
-    fun updateAll(vararg account: FireflyAccount)
+    override fun updateAll(vararg values: FireflyAccount)
 
     @Delete
-    fun deleteAll(vararg account: FireflyAccount)
+    override fun deleteAll(vararg values: FireflyAccount)
 
     @Query("SELECT * FROM ff_accounts")
-    fun getAllLive(): LiveData<List<FireflyAccount>>
+    override fun getAllLive(): LiveData<List<FireflyAccount>>
 }

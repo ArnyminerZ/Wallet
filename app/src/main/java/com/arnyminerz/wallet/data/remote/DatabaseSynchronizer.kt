@@ -2,44 +2,55 @@ package com.arnyminerz.wallet.data.remote
 
 import android.content.Context
 import androidx.annotation.WorkerThread
+import androidx.room.Dao
 import com.arnyminerz.wallet.data.`object`.FireflyAccount
+import com.arnyminerz.wallet.data.`object`.FireflyObject
 import com.arnyminerz.wallet.data.local.AppDatabase
+import com.arnyminerz.wallet.data.local.FireflyDao
 import timber.log.Timber
 
 class DatabaseSynchronizer(context: Context, private val api: FireflyApi) {
     private val database = AppDatabase.getInstance(context)
 
-    @WorkerThread
-    suspend fun synchronizeAccounts() {
-        Timber.d("Accounts synchronization for ${api.accountName} started.")
-        Timber.d("Getting accounts from remote...")
-        val remoteAccounts = api.getAccounts()
-        Timber.d("Getting local accounts...")
-        val accountsDao = database.accountsDao()
-        val localAccounts = accountsDao.getAll()
+    @Suppress("RedundantSuspendModifier")
+    private suspend inline fun <reified T: FireflyObject> synchronize(dao: FireflyDao<T>, remoteFetch: () -> List<T>): DatabaseSynchronizer {
+        val typeName = T::class.simpleName
+        Timber.d("$typeName synchronization for ${api.accountName} started.")
+        Timber.d("Getting $typeName from remote...")
+        val remote = remoteFetch()
+        Timber.d("Getting local $typeName...")
+        val local = dao.getAll()
 
         // Check for new and updatable accounts
-        val new = arrayListOf<FireflyAccount>()
-        val updatable = arrayListOf<FireflyAccount>()
-        for (account in remoteAccounts) {
-            val localAccount = localAccounts.find { it.id == account.id }
-            if (localAccount == null)
-                new.add(account)
-            else if (localAccount.hashCode() != account.hashCode())
-                updatable.add(account)
+        val new = arrayListOf<T>()
+        val updatable = arrayListOf<T>()
+        for (obj in remote) {
+            val localObj = local.find { it.id == obj.id }
+            if (localObj == null)
+                new.add(obj)
+            else if (localObj.hashCode() != obj.hashCode())
+                updatable.add(obj)
         }
 
         // Add all new accounts
-        Timber.d("Adding ${new.size} accounts.")
-        accountsDao.addAll(*new.toTypedArray())
+        Timber.d("Adding ${new.size} $typeName.")
+        dao.addAll(*new.toTypedArray())
 
         // Update all the updatable accounts
-        Timber.d("Updating ${updatable.size} accounts.")
-        accountsDao.updateAll(*updatable.toTypedArray())
+        Timber.d("Updating ${updatable.size} $typeName.")
+        dao.updateAll(*updatable.toTypedArray())
 
         // Remove all non-existing accounts
-        val removable = localAccounts.filter { account -> remoteAccounts.find { it.id == account.id } == null }
-        Timber.d("Removing ${removable.size} accounts.")
-        accountsDao.deleteAll(*removable.toTypedArray())
+        val removable = local.filter { account -> remote.find { it.id == account.id } == null }
+        Timber.d("Removing ${removable.size} $typeName.")
+        dao.deleteAll(*removable.toTypedArray())
+
+        return this
     }
+
+    @WorkerThread
+    suspend fun synchronizeAccounts() = synchronize(database.accountsDao()) { api.getAccounts() }
+
+    @WorkerThread
+    suspend fun synchronizeCurrencies() = synchronize(database.currenciesDao()) { api.getCurrencies() }
 }
