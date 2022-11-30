@@ -1,5 +1,8 @@
 package com.arnyminerz.wallet.data.`object`
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.arnyminerz.wallet.utils.serializer.FireflyJsonSerializer
 import com.arnyminerz.wallet.utils.serializer.JsonSerializable
 import com.arnyminerz.wallet.utils.serializer.JsonSerializer
@@ -10,8 +13,8 @@ data class FireflyCurrency(
     val code: String,
     val symbol: String,
     val decimalPlaces: Long,
-): JsonSerializable() {
-    companion object: JsonSerializer<FireflyCurrency>, FireflyJsonSerializer<FireflyCurrency> {
+) : JsonSerializable() {
+    companion object : JsonSerializer<FireflyCurrency>, FireflyJsonSerializer<FireflyCurrency> {
         override fun fromJson(json: JSONObject): FireflyCurrency = FireflyCurrency(
             json.getLong("currency_id"),
             json.getString("currency_code"),
@@ -35,4 +38,17 @@ data class FireflyCurrency(
     }
 
     fun format(amount: Double) = "%.${decimalPlaces}f $symbol".format(amount)
+
+    val icon: ImageVector
+        get() = when (symbol) {
+            "€" -> Icons.Rounded.EuroSymbol
+            "¥" -> Icons.Rounded.CurrencyYen
+            "$" -> Icons.Rounded.AttachMoney
+            "£" -> Icons.Rounded.CurrencyPound
+            "v" -> Icons.Rounded.CurrencyRuble
+            "元" -> Icons.Rounded.CurrencyYuan
+            "₺" -> Icons.Rounded.CurrencyLira
+            "₣" -> Icons.Rounded.CurrencyFranc
+            else -> Icons.Rounded.Money
+        }
 }

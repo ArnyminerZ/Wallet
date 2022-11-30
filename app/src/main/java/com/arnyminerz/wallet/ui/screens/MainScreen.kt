@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.arnyminerz.wallet.R
+import com.arnyminerz.wallet.activity.MainActivity
 import com.arnyminerz.wallet.model.MainViewModel
 import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.arnyminerz.wallet.ui.pages.firefly.FireflyDashboard
@@ -76,7 +77,12 @@ fun MainScreen(
                 },
                 floatingActionButton = {
                     FloatingActionButton(
-                        onClick = { pkPassPicker?.launch("application/*") },
+                        onClick = {
+                            when (pagerState.currentPage) {
+                                0 -> pkPassPicker?.launch("application/*")
+                                1 -> navController?.navigate(MainActivity.SCREEN_NEW_TRANSACTION)
+                            }
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Add,

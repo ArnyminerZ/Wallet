@@ -43,8 +43,20 @@
     <string name="dashboard_month_net">Month\'s Net Worth</string>
     <string name="dashboard_accounts_balance">Accounts</string>
 
+    <string name="new_transaction_title">New Transaction</string>
+    <string name="new_transaction_type_income">Income</string>
+    <string name="new_transaction_type_expense">Expense</string>
+    <string name="new_transaction_type_transaction">Transaction</string>
+    <string name="new_transaction_field_description">Description</string>
+    <string name="new_transaction_field_date">Date</string>
+    <string name="new_transaction_field_amount">Amount</string>
+    <string name="new_transaction_action_save">Save</string>
+
     <string name="image_desc_close">Close</string>
     <string name="image_desc_scan_qr">Scan QR</string>
     <string name="image_desc_display_password">Display Password</string>
     <string name="image_desc_hide_password">Hide Password</string>
+    <string name="image_desc_add_amount">Add amount</string>
+    <string name="image_desc_remove_amount">Remove amount</string>
+    <string name="image_desc_transfer_amount">Transfer amount</string>
 </resources>

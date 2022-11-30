@@ -31,10 +31,7 @@ import com.arnyminerz.wallet.storage.authCodes
 import com.arnyminerz.wallet.storage.tempClientId
 import com.arnyminerz.wallet.storage.tempClientSecret
 import com.arnyminerz.wallet.storage.tempServer
-import com.arnyminerz.wallet.ui.screens.AddingAccountScreen
-import com.arnyminerz.wallet.ui.screens.LoginScreen
-import com.arnyminerz.wallet.ui.screens.MainScreen
-import com.arnyminerz.wallet.ui.screens.PAGE_MONEY
+import com.arnyminerz.wallet.ui.screens.*
 import com.arnyminerz.wallet.ui.theme.setContentThemed
 import com.arnyminerz.wallet.utils.doAsync
 import com.arnyminerz.wallet.utils.getPreference
@@ -62,9 +59,10 @@ class MainActivity : AppCompatActivity() {
 
         const val EXTRA_ADDING_NEW_ACCOUNT = "adding_new_account"
 
-        private const val SCREEN_HOME = "Home"
-        private const val SCREEN_ADD_ACCOUNT = "AddAccount"
-        private const val SCREEN_NEW_ACCOUNT = "NewAccount"
+        const val SCREEN_HOME = "Home"
+        const val SCREEN_ADD_ACCOUNT = "AddAccount"
+        const val SCREEN_NEW_ACCOUNT = "NewAccount"
+        const val SCREEN_NEW_TRANSACTION = "NewTransaction"
     }
 
     private lateinit var ah: AccountHelper
@@ -125,6 +123,13 @@ class MainActivity : AppCompatActivity() {
                     popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                     popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                 ) { AddingAccountScreen() }
+                composable(
+                    SCREEN_NEW_TRANSACTION,
+                    enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
+                    exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
+                    popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
+                    popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
+                ) { NewTransactionScreen() }
             }
         }
     }
