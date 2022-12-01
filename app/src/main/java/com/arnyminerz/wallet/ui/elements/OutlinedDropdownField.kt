@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import com.arnyminerz.wallet.ui.colors.clickableDisabledTextFieldColors
 
 @Composable
 @ExperimentalMaterial3Api
@@ -31,18 +32,7 @@ fun <K: Any> OutlinedDropdownField(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(enabled = enabled) { expanded = !expanded },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                disabledBorderColor = if (expanded)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = .7f),
-                disabledLabelColor = MaterialTheme.colorScheme.onSurface,
-                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface,
-                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .5f),
-                disabledSupportingTextColor = MaterialTheme.colorScheme.onBackground,
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface,
-            ),
+            colors = clickableDisabledTextFieldColors(expanded),
             placeholder = { placeholder?.let { Text(it) } },
             label = { label?.let { Text(it) } },
         )

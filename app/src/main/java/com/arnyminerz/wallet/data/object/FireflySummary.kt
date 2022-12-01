@@ -10,7 +10,7 @@ data class FireflySummary(
     val balance: FireflySummaryEntry,
     val spent: FireflySummaryEntry,
     val earned: FireflySummaryEntry,
-    val leftToSpend: FireflySummaryEntry,
+    val leftToSpend: FireflySummaryEntry?,
     val netWorth: FireflySummaryEntry,
 ): JsonSerializable() {
     companion object: JsonSerializer<FireflySummary> {
@@ -18,7 +18,7 @@ data class FireflySummary(
             json.keys().asSequence().find { it.startsWith("balance-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.Balance) },
             json.keys().asSequence().find { it.startsWith("spent-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.Spent) },
             json.keys().asSequence().find { it.startsWith("earned-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.Earned) },
-            json.keys().asSequence().find { it.startsWith("left-to-spend-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.LeftToSpend) },
+            json.keys().asSequence().find { it.startsWith("left-to-spend-") }?.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.LeftToSpend) },
             json.keys().asSequence().find { it.startsWith("net-worth-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.NetWorth) },
         )
 

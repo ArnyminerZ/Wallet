@@ -4,14 +4,12 @@ import android.accounts.Account
 import android.content.Context
 import androidx.annotation.WorkerThread
 import com.arnyminerz.wallet.account.AccountHelper
-import com.arnyminerz.wallet.data.`object`.FireflyAccount
-import com.arnyminerz.wallet.data.`object`.FireflyCurrency
-import com.arnyminerz.wallet.data.`object`.FireflySummary
-import com.arnyminerz.wallet.data.`object`.FireflyTransaction
+import com.arnyminerz.wallet.data.`object`.*
 import com.arnyminerz.wallet.utils.asJSONObjects
+import com.arnyminerz.wallet.utils.mapObjects
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.min
@@ -26,14 +24,24 @@ class FireflyApi(context: Context, private val account: Account) {
 
     @WorkerThread
     @Throws(JSONException::class)
-    private suspend fun get(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
+    private suspend fun makeRequest(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
         ah.getFireflyRequestData(account).let { data ->
             ah.getEndpoint(
                 endpoint,
                 data,
                 queryParameters,
             )
-        }.let { JSONObject(it) }
+        }
+
+    @WorkerThread
+    @Throws(JSONException::class)
+    private suspend fun getObject(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
+        JSONObject(makeRequest(account, endpoint, queryParameters))
+
+    @WorkerThread
+    @Throws(JSONException::class)
+    private suspend fun getArray(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
+        JSONArray(makeRequest(account, endpoint, queryParameters))
 
     /**
      * Runs [get] with multiple pages. Keeps querying pages until [limit] is reached, or the last one is reached.
@@ -51,7 +59,7 @@ class FireflyApi(context: Context, private val account: Account) {
 
         var page = 0
         do {
-            val json = get(
+            val json = getObject(
                 account,
                 endpoint,
                 headers.toMutableMap().apply { put("page", (++page).toString()) },
@@ -83,12 +91,12 @@ class FireflyApi(context: Context, private val account: Account) {
         NullPointerException::class,
     )
     @WorkerThread
-    suspend fun getMonthBalance() = get(
+    suspend fun getMonthBalance() = getObject(
         account,
         "/summary/basic",
         mapOf(
             "start" to Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }.time.let { SHORT_DATE.format(it) },
-            "end" to Date().let { SHORT_DATE.format(it) },
+            "end" to Calendar.getInstance().apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }.time.let { SHORT_DATE.format(it) },
         ),
     ).let { FireflySummary.fromFirefly(it) }
 
@@ -110,7 +118,7 @@ class FireflyApi(context: Context, private val account: Account) {
             "/transactions",
             mapOf(
                 "start" to Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }.time.let { SHORT_DATE.format(it) },
-                "end" to Date().let { SHORT_DATE.format(it) },
+                "end" to Calendar.getInstance().apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }.time.let { SHORT_DATE.format(it) },
             ),
             limit,
         ).map { group ->
@@ -164,6 +172,24 @@ class FireflyApi(context: Context, private val account: Account) {
             attrs.put("id", json.getString("id"))
             FireflyCurrency.fromJson(attrs)
         }
+
+    /**
+     * Gets a list of all the categories.
+     * @author Arnau Mora
+     * @since 20221201
+     * @throws NullPointerException If the response doesn't contain the required fields.
+     * @throws JSONException If there's an error while parsing the JSON response.
+     */
+    @Throws(
+        JSONException::class,
+        NullPointerException::class,
+    )
+    @WorkerThread
+    suspend fun getCategories(): List<FireflyCategory> =
+        getArray(
+            account,
+            "/autocomplete/categories",
+        ).mapObjects { FireflyCategory.fromJson(it) }
 }
 
 fun Account.api(context: Context) = FireflyApi(context, this)

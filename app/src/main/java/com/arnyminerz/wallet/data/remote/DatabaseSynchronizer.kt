@@ -53,4 +53,7 @@ class DatabaseSynchronizer(context: Context, private val api: FireflyApi) {
 
     @WorkerThread
     suspend fun synchronizeCurrencies() = synchronize(database.currenciesDao()) { api.getCurrencies() }
+
+    @WorkerThread
+    suspend fun synchronizeCategories() = synchronize(database.categoriesDao()) { api.getCategories() }
 }

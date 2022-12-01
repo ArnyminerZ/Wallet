@@ -29,6 +29,7 @@ class App : Application() {
                     DatabaseSynchronizer(this@App, it.api(this@App))
                         .synchronizeAccounts()
                         .synchronizeCurrencies()
+                        .synchronizeCategories()
                 }
             }
         }

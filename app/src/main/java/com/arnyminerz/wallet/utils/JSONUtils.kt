@@ -137,3 +137,10 @@ fun <T : Any> JSONObject.serializeInlineOrNull(serializer: FireflyJsonSerializer
  */
 val JSONArray.asJSONObjects: List<JSONObject>
     get() = (0 until length()).map { getJSONObject(it) }
+
+/**
+ * Maps all the contents of the array as [JSONObject]s.
+ * @author Arnau Mora
+ * @since 20221201
+ */
+fun <T> JSONArray.mapObjects(predicate: (obj: JSONObject) -> T) = (0 until length()).map { getJSONObject(it) }.map(predicate)

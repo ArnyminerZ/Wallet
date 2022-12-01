@@ -50,6 +50,7 @@
     <string name="new_transaction_field_description">Description</string>
     <string name="new_transaction_field_date">Date</string>
     <string name="new_transaction_field_amount">Amount</string>
+    <string name="new_transaction_field_category">Category</string>
     <string name="new_transaction_action_save">Save</string>
 
     <string name="currency_dialog_title">Currencies</string>

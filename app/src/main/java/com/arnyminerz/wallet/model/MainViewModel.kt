@@ -19,6 +19,7 @@ import com.arnyminerz.wallet.pkpass.data.PassAspect
 import com.arnyminerz.wallet.pkpass.data.boarding.BoardingData
 import com.arnyminerz.wallet.pkpass.data.boarding.TransitType
 import com.arnyminerz.wallet.utils.*
+import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
@@ -45,12 +46,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val accountsDao = database.accountsDao()
     private val currenciesDao = database.currenciesDao()
+    private val categoriesDao = database.categoriesDao()
 
     val accounts = ah.accountsLive
 
     val storedAccounts = accountsDao.getAllLive()
 
     val storedCurrencies = currenciesDao.getAllLive()
+
+    val categories = categoriesDao.getAllLive()
 
     /**
      * Loads a pkpass from the response uri from a file picker.
@@ -118,8 +122,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
     }
 
+    /**
+     * Gets the balance for the current month.
+     * @author Arnau Mora
+     * @since 20221201
+     */
     fun getSummary(account: Account) = future {
-            account.api(getApplication()).getMonthBalance().also { postValue(it) }
+            try {
+                account.api(getApplication()).getMonthBalance().also { postValue(it) }
+            } catch (e: NullPointerException) {
+                Timber.e(e, "Missing fields on response.")
+            } catch (e: JSONException) {
+                Timber.e(e, "Could not parse response.")
+            }
         }
 
     fun getTransactions(account: Account, limit: Int = Int.MAX_VALUE) = future {

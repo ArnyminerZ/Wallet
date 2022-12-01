@@ -6,10 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.arnyminerz.wallet.data.`object`.FireflyAccount
+import com.arnyminerz.wallet.data.`object`.FireflyCategory
 import com.arnyminerz.wallet.data.`object`.FireflyCurrency
 
 @Database(
-    entities = [FireflyAccount::class, FireflyCurrency::class],
+    entities = [FireflyAccount::class, FireflyCurrency::class, FireflyCategory::class],
     version = 1,
 )
 @TypeConverters(Converters::class)
@@ -27,4 +28,6 @@ abstract class AppDatabase: RoomDatabase() {
     abstract fun accountsDao(): AccountsDao
 
     abstract fun currenciesDao(): CurrenciesDao
+
+    abstract fun categoriesDao(): CategoriesDao
 }

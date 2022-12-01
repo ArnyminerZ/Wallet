@@ -1,6 +1,8 @@
 package com.arnyminerz.wallet.activity
 
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -23,6 +25,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.account.AccountHelper
@@ -92,6 +95,8 @@ class MainActivity : AppCompatActivity() {
 
         accountIndex = intent.extras?.getInt(EXTRA_ACCOUNT_INDEX, -1) ?: -1
         val addingNewAccount = intent.extras?.getBoolean(EXTRA_ADDING_NEW_ACCOUNT, false) ?: false
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContentThemed {
             navController = rememberAnimatedNavController()

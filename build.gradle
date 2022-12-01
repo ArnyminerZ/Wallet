@@ -7,6 +7,7 @@ buildscript {
         camerax_version = "1.1.0"
         room_version = '2.4.3'
         ksp_version = '1.0.7'
+        dialogs_version = '1.0.1'
     }
 }
 

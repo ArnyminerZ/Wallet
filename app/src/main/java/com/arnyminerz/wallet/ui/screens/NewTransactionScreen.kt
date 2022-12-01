@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -25,14 +26,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.model.MainViewModel
+import com.arnyminerz.wallet.ui.colors.clickableDisabledTextFieldColors
+import com.arnyminerz.wallet.ui.elements.DropdownTextField
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.maxkeppeker.sheets.core.models.base.rememberSheetState
+import com.maxkeppeler.sheets.calendar.CalendarDialog
+import com.maxkeppeler.sheets.calendar.models.CalendarSelection
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 private val tabs = listOf(
@@ -41,18 +49,20 @@ private val tabs = listOf(
     (Icons.Rounded.SwapHoriz to Icons.Outlined.SwapHoriz) to R.string.new_transaction_type_income,
 )
 
-@ExperimentalPagerApi
 @Preview(
     showBackground = true,
     showSystemUi = true,
 )
 @Composable
+@ExperimentalPagerApi
+@ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 fun NewTransactionScreen(viewMode: MainViewModel = viewModel(), onCloseRequested: () -> Unit = {}) {
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
 
     val currencies by viewMode.storedCurrencies.observeAsState()
+    val categories by viewMode.categories.observeAsState()
 
     Scaffold(
         topBar = {
@@ -69,15 +79,11 @@ fun NewTransactionScreen(viewMode: MainViewModel = viewModel(), onCloseRequested
             )
         }
     ) { paddingValues ->
-        var date by remember {
-            mutableStateOf(
-                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    .format(Date())
-            )
-        }
+        var date by remember { mutableStateOf(LocalDate.now()) }
         var description by remember { mutableStateOf("") }
         var amount by remember { mutableStateOf("0.0") }
         var currencyIndex by remember { mutableStateOf(0) }
+        var category by remember { mutableStateOf("") }
 
         LaunchedEffect(currencies) {
             snapshotFlow { currencies }
@@ -124,10 +130,19 @@ fun NewTransactionScreen(viewMode: MainViewModel = viewModel(), onCloseRequested
                 }
             )
 
+        val dialogState = rememberSheetState(visible = false)
+        CalendarDialog(
+            state = dialogState,
+            selection = CalendarSelection.Date(selectedDate = date) {
+                date = it
+            },
+        )
+        
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .imePadding(),
             verticalArrangement = Arrangement.Top,
         ) {
             var tabIndex by remember { mutableStateOf(0) }
@@ -173,15 +188,19 @@ fun NewTransactionScreen(viewMode: MainViewModel = viewModel(), onCloseRequested
                     verticalArrangement = Arrangement.Top,
                 ) {
                     OutlinedTextField(
-                        value = date,
+                        value = date.format(DateTimeFormatter.ISO_DATE),
                         onValueChange = { },
                         label = { Text(stringResource(R.string.new_transaction_field_date)) },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { dialogState.show() },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Ascii,
                         ),
+                        colors = clickableDisabledTextFieldColors(false),
                         singleLine = true,
                         readOnly = true,
+                        enabled = false,
                     )
                     OutlinedTextField(
                         value = description,
@@ -228,6 +247,12 @@ fun NewTransactionScreen(viewMode: MainViewModel = viewModel(), onCloseRequested
                                 }
                             } ?: CircularProgressIndicator()
                         },
+                    )
+                    DropdownTextField(
+                        value = category,
+                        onValueChange = { category = it },
+                        autocomplete = categories?.map { it.name } ?: emptyList(),
+                        label = stringResource(R.string.new_transaction_field_category),
                     )
                 }
             }
