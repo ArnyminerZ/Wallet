@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
+    id 'com.flaviofaria.catalog'
 }
 
 android {
@@ -47,6 +48,9 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion "$compose_compiler_version"
+    }
+    catalog {
+        generateResourcesExtensions = false
     }
     packagingOptions {
         resources {
