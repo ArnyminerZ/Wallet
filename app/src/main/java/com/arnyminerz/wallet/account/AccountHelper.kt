@@ -1,11 +1,9 @@
 package com.arnyminerz.wallet.account
 
-import android.accounts.Account
-import android.accounts.AccountManager
-import android.accounts.AuthenticatorException
-import android.accounts.OnAccountsUpdateListener
-import android.accounts.OperationCanceledException
+import android.accounts.*
+import android.app.Activity
 import android.content.Context
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -201,7 +199,16 @@ class AccountHelper private constructor(context: Context) : OnAccountsUpdateList
             // Code already authorised
             ui { context.toast("Already authed") }
         } else {
-            val url = "$server/oauth/authorize?response_type=code&client_id=$clientId&client_secret=$clientSecret&redirect_uri=app://com.arnyminerz.wallet"
+            val url = Uri.parse(server)
+            val uri = Uri.Builder()
+                .scheme(url.scheme)
+                .authority(url.authority)
+                .path("/oauth/authorize")
+                .appendQueryParameter("response_type", "code")
+                .appendQueryParameter("client_id", clientId)
+                .appendQueryParameter("client_secret", clientId)
+                .appendQueryParameter("redirect_uri", "app://com.arnyminerz.wallet")
+                .build()
             val builder = CustomTabsIntent.Builder()
                 .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
             val customTabsIntent = builder.build()
@@ -212,9 +219,20 @@ class AccountHelper private constructor(context: Context) : OnAccountsUpdateList
                 tempClientSecret to clientSecret,
             )
 
-            customTabsIntent.launchUrl(context, Uri.parse(url))
+            if (context !is Activity)
+                customTabsIntent.intent.flags = FLAG_ACTIVITY_NEW_TASK
+
+            customTabsIntent.launchUrl(context, uri)
         }
     }
+
+    @WorkerThread
+    suspend fun authoriseClient(context: Context, account: Account) = authoriseClient(
+        context,
+        am.getUserData(account, "server"),
+        am.getUserData(account, "client_id"),
+        am.getUserData(account, "client_secret"),
+    )
 
     /**
      * Gets the AuthToken for the given accounts.
@@ -245,9 +263,13 @@ class AccountHelper private constructor(context: Context) : OnAccountsUpdateList
      * @param endpoint The endpoint to make the request to. Must start with "/", matches the contents after "/api/v1".
      * @param requestData Data for authorising the request.
      * @param queryParameters Some parameters to append to the query.
+     * @see HttpRedirectException
+     * @see HttpClientException
+     * @see HttpServerException
      * @see getFireflyRequestData
      */
     @WorkerThread
+    @Throws(HttpResponseException::class)
     suspend fun getEndpoint(endpoint: String, requestData: FireflyRequestData, queryParameters: Map<String, String> = emptyMap()): String {
         httpClient = httpClient.newBuilder()
             .addInterceptor(AuthHeaderInterceptor(requestData.authTokenType, requestData.authToken))
@@ -292,7 +314,12 @@ class AccountHelper private constructor(context: Context) : OnAccountsUpdateList
      * @since 20221128
      * @param uri The url to make the request to.
      * @param headers The headers to add to the request.
+     * @throws HttpResponseException If there's an issue while making the request.
+     * @see HttpRedirectException
+     * @see HttpClientException
+     * @see HttpServerException
      */
+    @Throws(HttpResponseException::class)
     private suspend fun getRequest(uri: Uri, headers: Map<String, String>) = suspendCoroutine { c ->
         Timber.d("Making GET request to: $uri. Headers: $headers")
         val request = Request.Builder()
@@ -313,28 +340,28 @@ class AccountHelper private constructor(context: Context) : OnAccountsUpdateList
                             HttpRedirectException(
                                 "Request returned a non-success code.",
                                 response.code,
-                                response.body,
+                                response.body?.string(),
                             )
                         )
                         in 400..499 -> c.resumeWithException(
                             HttpClientException(
                                 "Request returned a non-success code.",
                                 response.code,
-                                response.body,
+                                response.body?.string(),
                             )
                         )
                         in 500..599 -> c.resumeWithException(
                             HttpServerException(
                                 "Request returned a non-success code.",
                                 response.code,
-                                response.body,
+                                response.body?.string(),
                             )
                         )
                         else -> c.resumeWithException(
                             HttpResponseException(
                                 "Request returned a non-success code (${response.code})",
                                 response.code,
-                                response.body
+                                response.body?.string(),
                             )
                         )
                     }
