@@ -2,16 +2,16 @@ package com.arnyminerz.wallet.data.remote
 
 import android.content.Context
 import androidx.annotation.WorkerThread
-import androidx.room.Dao
-import com.arnyminerz.wallet.data.`object`.FireflyAccount
 import com.arnyminerz.wallet.data.`object`.FireflyObject
 import com.arnyminerz.wallet.data.local.AppDatabase
 import com.arnyminerz.wallet.data.local.FireflyDao
+import com.arnyminerz.wallet.exception.HttpResponseException
 import timber.log.Timber
 
 class DatabaseSynchronizer(context: Context, private val api: FireflyApi) {
     private val database = AppDatabase.getInstance(context)
 
+    @Throws(HttpResponseException::class)
     @Suppress("RedundantSuspendModifier")
     private suspend inline fun <reified T: FireflyObject> synchronize(dao: FireflyDao<T>, remoteFetch: () -> List<T>): DatabaseSynchronizer {
         val typeName = T::class.simpleName
@@ -49,11 +49,14 @@ class DatabaseSynchronizer(context: Context, private val api: FireflyApi) {
     }
 
     @WorkerThread
+    @Throws(HttpResponseException::class)
     suspend fun synchronizeAccounts() = synchronize(database.accountsDao()) { api.getAccounts() }
 
     @WorkerThread
+    @Throws(HttpResponseException::class)
     suspend fun synchronizeCurrencies() = synchronize(database.currenciesDao()) { api.getCurrencies() }
 
     @WorkerThread
+    @Throws(HttpResponseException::class)
     suspend fun synchronizeCategories() = synchronize(database.categoriesDao()) { api.getCategories() }
 }

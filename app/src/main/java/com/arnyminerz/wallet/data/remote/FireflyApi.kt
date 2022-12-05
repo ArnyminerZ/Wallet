@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.annotation.WorkerThread
 import com.arnyminerz.wallet.account.AccountHelper
 import com.arnyminerz.wallet.data.`object`.*
+import com.arnyminerz.wallet.exception.HttpResponseException
 import com.arnyminerz.wallet.utils.asJSONObjects
 import com.arnyminerz.wallet.utils.mapObjects
 import org.json.JSONArray
@@ -23,7 +24,7 @@ class FireflyApi(context: Context, private val account: Account) {
     internal val accountName = account.name
 
     @WorkerThread
-    @Throws(JSONException::class)
+    @Throws(JSONException::class, HttpResponseException::class)
     private suspend fun makeRequest(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
         ah.getFireflyRequestData(account).let { data ->
             ah.getEndpoint(
@@ -34,12 +35,12 @@ class FireflyApi(context: Context, private val account: Account) {
         }
 
     @WorkerThread
-    @Throws(JSONException::class)
+    @Throws(JSONException::class, HttpResponseException::class)
     private suspend fun getObject(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
         JSONObject(makeRequest(account, endpoint, queryParameters))
 
     @WorkerThread
-    @Throws(JSONException::class)
+    @Throws(JSONException::class, HttpResponseException::class)
     private suspend fun getArray(account: Account, endpoint: String, queryParameters: Map<String, String> = emptyMap()) =
         JSONArray(makeRequest(account, endpoint, queryParameters))
 
@@ -53,7 +54,7 @@ class FireflyApi(context: Context, private val account: Account) {
      * @return A list of [JSONObject].
      */
     @WorkerThread
-    @Throws(JSONException::class)
+    @Throws(JSONException::class, HttpResponseException::class)
     private suspend fun getWithPages(endpoint: String, headers: Map<String, String>, limit: Int = Int.MAX_VALUE): List<JSONObject> {
         val builder = arrayListOf<JSONObject>()
 
@@ -89,14 +90,21 @@ class FireflyApi(context: Context, private val account: Account) {
     @Throws(
         JSONException::class,
         NullPointerException::class,
+        HttpResponseException::class,
     )
     @WorkerThread
     suspend fun getMonthBalance() = getObject(
         account,
         "/summary/basic",
         mapOf(
-            "start" to Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }.time.let { SHORT_DATE.format(it) },
-            "end" to Calendar.getInstance().apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }.time.let { SHORT_DATE.format(it) },
+            "start" to Calendar.getInstance()
+                .apply { set(Calendar.DAY_OF_MONTH, 1) }
+                .time
+                .let { SHORT_DATE.format(it) },
+            "end" to Calendar.getInstance()
+                .apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }
+                .time
+                .let { SHORT_DATE.format(it) },
         ),
     ).let { FireflySummary.fromFirefly(it) }
 
@@ -111,14 +119,21 @@ class FireflyApi(context: Context, private val account: Account) {
     @Throws(
         JSONException::class,
         NullPointerException::class,
+        HttpResponseException::class,
     )
     @WorkerThread
     suspend fun getTransactions(limit: Int = Int.MAX_VALUE): List<FireflyTransaction> =
         getWithPages(
             "/transactions",
             mapOf(
-                "start" to Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }.time.let { SHORT_DATE.format(it) },
-                "end" to Calendar.getInstance().apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }.time.let { SHORT_DATE.format(it) },
+                "start" to Calendar.getInstance()
+                    .apply { set(Calendar.DAY_OF_MONTH, 1) }
+                    .time
+                    .let { SHORT_DATE.format(it) },
+                "end" to Calendar.getInstance()
+                    .apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }
+                    .time
+                    .let { SHORT_DATE.format(it) },
             ),
             limit,
         ).map { group ->
@@ -140,6 +155,7 @@ class FireflyApi(context: Context, private val account: Account) {
     @Throws(
         JSONException::class,
         NullPointerException::class,
+        HttpResponseException::class,
     )
     @WorkerThread
     suspend fun getAccounts(limit: Int = Int.MAX_VALUE): List<FireflyAccount> =
@@ -160,6 +176,7 @@ class FireflyApi(context: Context, private val account: Account) {
     @Throws(
         JSONException::class,
         NullPointerException::class,
+        HttpResponseException::class,
     )
     @WorkerThread
     suspend fun getCurrencies(limit: Int = Int.MAX_VALUE): List<FireflyCurrency> =
@@ -183,6 +200,7 @@ class FireflyApi(context: Context, private val account: Account) {
     @Throws(
         JSONException::class,
         NullPointerException::class,
+        HttpResponseException::class,
     )
     @WorkerThread
     suspend fun getCategories(): List<FireflyCategory> =
