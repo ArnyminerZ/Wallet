@@ -3,8 +3,8 @@ package com.arnyminerz.wallet
 import android.app.Application
 import androidx.core.os.HandlerCompat
 import com.arnyminerz.wallet.account.AccountHelper
-import com.arnyminerz.wallet.data.remote.DatabaseSynchronizer
-import com.arnyminerz.wallet.data.remote.api
+import com.arnyminerz.wallet.database.remote.DatabaseSynchronizer
+import com.arnyminerz.wallet.database.remote.api
 import com.arnyminerz.wallet.exception.HttpClientException
 import com.arnyminerz.wallet.utils.doAsync
 import com.arnyminerz.wallet.utils.getStringOrNull

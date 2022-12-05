@@ -1,8 +1,6 @@
 package com.arnyminerz.wallet.ui.elements
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Balance
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -13,8 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.arnyminerz.wallet.R
-import com.arnyminerz.wallet.data.`object`.FireflySummaryEntry
+import com.arnyminerz.wallet.database.data.FireflySummaryEntry
 
 @Composable
 fun SummaryEntry(

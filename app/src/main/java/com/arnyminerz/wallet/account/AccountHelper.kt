@@ -13,7 +13,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.arnyminerz.wallet.BuildConfig
-import com.arnyminerz.wallet.data.remote.FireflyRequestData
+import com.arnyminerz.wallet.database.remote.FireflyRequestData
 import com.arnyminerz.wallet.exception.HttpClientException
 import com.arnyminerz.wallet.exception.HttpRedirectException
 import com.arnyminerz.wallet.exception.HttpResponseException

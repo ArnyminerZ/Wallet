@@ -8,11 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
 import com.arnyminerz.wallet.account.AccountHelper
-import com.arnyminerz.wallet.data.`object`.FireflySummary
-import com.arnyminerz.wallet.data.local.AppDatabase
-import com.arnyminerz.wallet.data.remote.api
+import com.arnyminerz.wallet.database.local.AppDatabase
+import com.arnyminerz.wallet.database.remote.api
 import com.arnyminerz.wallet.pkpass.Parser
 import com.arnyminerz.wallet.pkpass.data.Pass
 import com.arnyminerz.wallet.pkpass.data.PassAspect
@@ -20,7 +18,6 @@ import com.arnyminerz.wallet.pkpass.data.boarding.BoardingData
 import com.arnyminerz.wallet.pkpass.data.boarding.TransitType
 import com.arnyminerz.wallet.utils.*
 import org.json.JSONException
-import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream

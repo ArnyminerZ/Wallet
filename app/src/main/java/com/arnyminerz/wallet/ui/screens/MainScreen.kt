@@ -2,7 +2,6 @@ package com.arnyminerz.wallet.ui.screens
 
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +18,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.arnyminerz.wallet.R
@@ -33,9 +33,18 @@ import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-const val PAGE_PASSES = 0
-const val PAGE_MONEY = 1
+const val PAGE_MONEY = 0
+const val PAGE_PASSES = 1
 
+private val pages = mapOf(
+    PAGE_MONEY to ((Icons.Rounded.Cloud to Icons.Outlined.Cloud) to R.string.appbar_cloud),
+    PAGE_PASSES to ((Icons.Rounded.List to Icons.Outlined.List) to R.string.appbar_list),
+)
+
+@Preview(
+    showSystemUi = true,
+    showBackground = true,
+)
 @Composable
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
@@ -43,36 +52,35 @@ fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
     pkPassPicker: ActivityResultLauncher<String>? = null,
     navController: NavController? = null,
-    pagerState: PagerState
+    pagerState: PagerState = rememberPagerState(),
 ) {
     val scope = rememberCoroutineScope()
     val accounts by mainViewModel.accounts.observeAsState(emptyArray())
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.welcome)) },
+            )
+        },
         bottomBar = {
             BottomAppBar(
                 actions = {
-                    IconButton(
-                        onClick = { scope.launch { pagerState.scrollToPage(PAGE_PASSES) } },
-                    ) {
-                        Icon(
-                            imageVector = if (pagerState.currentPage == PAGE_PASSES)
-                                Icons.Rounded.List
-                            else
-                                Icons.Outlined.List,
-                            contentDescription = stringResource(R.string.appbar_list)
-                        )
-                    }
-                    IconButton(
-                        onClick = { scope.launch { pagerState.scrollToPage(PAGE_MONEY) } },
-                    ) {
-                        Icon(
-                            imageVector = if (pagerState.currentPage == PAGE_MONEY)
-                                Icons.Rounded.Cloud
-                            else
-                                Icons.Outlined.Cloud,
-                            contentDescription = stringResource(R.string.appbar_cloud)
-                        )
+                    for ((index, data) in pages) {
+                        val (icons, text) = data
+                        val (selectedIcon, unselectedIcon) = icons
+
+                        IconButton(
+                            onClick = { scope.launch { pagerState.scrollToPage(index) } },
+                        ) {
+                            Icon(
+                                imageVector = if (pagerState.currentPage == index)
+                                    selectedIcon
+                                else
+                                    unselectedIcon,
+                                contentDescription = stringResource(text)
+                            )
+                        }
                     }
                 },
                 floatingActionButton = {
@@ -91,7 +99,7 @@ fun MainScreen(
                     }
                 },
             )
-        }
+        },
     ) { paddingValues ->
         HorizontalPager(
             count = 2,
