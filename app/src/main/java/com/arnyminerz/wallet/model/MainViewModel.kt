@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.arnyminerz.wallet.account.AccountHelper
+import com.arnyminerz.wallet.database.data.FireflyTransaction
 import com.arnyminerz.wallet.database.local.AppDatabase
 import com.arnyminerz.wallet.database.remote.api
 import com.arnyminerz.wallet.pkpass.Parser
@@ -21,6 +22,7 @@ import org.json.JSONException
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
+import java.util.*
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
@@ -125,16 +127,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @since 20221201
      */
     fun getSummary(account: Account) = future {
-            try {
-                account.api(getApplication()).getMonthBalance().also { postValue(it) }
-            } catch (e: NullPointerException) {
-                Timber.e(e, "Missing fields on response.")
-            } catch (e: JSONException) {
-                Timber.e(e, "Could not parse response.")
-            }
+        try {
+            account.api(getApplication()).getMonthBalance().also { postValue(it) }
+        } catch (e: NullPointerException) {
+            Timber.e(e, "Missing fields on response.")
+        } catch (e: JSONException) {
+            Timber.e(e, "Could not parse response.")
         }
-
-    fun getTransactions(account: Account, limit: Int = Int.MAX_VALUE) = future {
-        account.api(getApplication()).getTransactions(limit).also { postValue(it) }
     }
+
+    /**
+     * Gets all the transactions for the given account in a period of time.
+     * @author Arnau Mora
+     * @since 20221206
+     * @param account The account to get the transactions from.
+     * @param limit The maximum amount of transactions to get.
+     * @param start The starting day to fetch. Defaults to the first day of the current month.
+     * @param end The ending day to fetch. Defaults to the last day of the current month.
+     */
+    fun getTransactions(
+        account: Account,
+        limit: Int = Int.MAX_VALUE,
+        start: Date? = null,
+        end: Date? = null,
+        callback: (transactions: List<FireflyTransaction>) -> Unit,
+    ) = launch { account.api(getApplication()).getTransactions(limit, start, end).also(callback) }
 }
