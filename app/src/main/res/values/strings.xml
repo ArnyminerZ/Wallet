@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Wallet</string>
 
+    <string name="welcome">Welcome back!</string>
+
     <string name="appbar_list">Passes List</string>
     <string name="appbar_cloud">Cloud Storage</string>
 
@@ -36,12 +38,28 @@
     <string name="permission_camera_message">It\'s required to have the camera permission to launch the scanner.</string>
     <string name="permission_grant">Grant</string>
 
+    <string name="dashboard_year_balance">Year\'s Balance</string>
     <string name="dashboard_month_balance">Month\'s Balance</string>
     <string name="dashboard_month_spent">Month\'s Spent</string>
     <string name="dashboard_month_earned">Month\'s Earned</string>
     <string name="dashboard_month_left">Month\'s Left to Spend</string>
     <string name="dashboard_month_net">Month\'s Net Worth</string>
     <string name="dashboard_accounts_balance">Accounts</string>
+    <string name="dashboard_this_month">This Month</string>
+    <string name="dashboard_income">Income</string>
+    <string name="dashboard_outcome">Outcome</string>
+
+    <string name="dashboard_sort_daily">Daily</string>
+    <string name="dashboard_sort_weekly">Weekly</string>
+    <string name="dashboard_sort_monthly">Monthly</string>
+    <string name="dashboard_sort_yearly">Yearly</string>
+
+    <!--
+    Used in each section of the dashboard view, when the "Weekly" sorting mode is selected. Will display the current's week number.
+    @author Arnau Mora
+    @since 20221206
+    -->
+    <string name="dashboard_group_week_number">Week</string>
 
     <string name="new_transaction_title">New Transaction</string>
     <string name="new_transaction_type_income">Income</string>
@@ -58,6 +76,13 @@
 
     <string name="dialog_close">Close</string>
 
+    <!--
+    The description to display when a transaction doesn't have one.
+    @author Arnau Mora
+    @since 20221206
+    -->
+    <string name="transaction_description_unknown"><em>Unknown</em></string>
+
     <string name="image_desc_close">Close</string>
     <string name="image_desc_scan_qr">Scan QR</string>
     <string name="image_desc_display_password">Display Password</string>
@@ -65,4 +90,12 @@
     <string name="image_desc_add_amount">Add amount</string>
     <string name="image_desc_remove_amount">Remove amount</string>
     <string name="image_desc_transfer_amount">Transfer amount</string>
+    <string name="image_desc_income">Income</string>
+    <string name="image_desc_outcome">Outcome</string>
+    <!--
+    An arrow indicating the direction of a transaction. From account to account.
+    @author Arnau Mora
+    @since 20221206
+    -->
+    <string name="image_desc_transaction_direction">Transaction direction</string>
 </resources>
