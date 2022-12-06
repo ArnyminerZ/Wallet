@@ -113,6 +113,8 @@ class FireflyApi(context: Context, private val account: Account) {
      * @author Arnau Mora
      * @since 20221128
      * @param limit The maximum amount of transactions to get.
+     * @param start The starting day to fetch. Defaults to the first day of the current month.
+     * @param end The ending day to fetch. Defaults to the last day of the current month.
      * @throws NullPointerException If the response doesn't contain the required fields.
      * @throws JSONException If there's an error while parsing the JSON response.
      */
@@ -122,18 +124,20 @@ class FireflyApi(context: Context, private val account: Account) {
         HttpResponseException::class,
     )
     @WorkerThread
-    suspend fun getTransactions(limit: Int = Int.MAX_VALUE): List<FireflyTransaction> =
+    suspend fun getTransactions(
+        limit: Int = Int.MAX_VALUE,
+        start: Date? = null,
+        end: Date? = null,
+    ): List<FireflyTransaction> =
         getWithPages(
             "/transactions",
             mapOf(
-                "start" to Calendar.getInstance()
+                "start" to (start ?: Calendar.getInstance()
                     .apply { set(Calendar.DAY_OF_MONTH, 1) }
-                    .time
-                    .let { SHORT_DATE.format(it) },
-                "end" to Calendar.getInstance()
+                    .time).let { SHORT_DATE.format(it) },
+                "end" to (end ?: Calendar.getInstance()
                     .apply { add(Calendar.MONTH, 1); set(Calendar.DAY_OF_MONTH, 1); add(Calendar.DATE, -1) }
-                    .time
-                    .let { SHORT_DATE.format(it) },
+                    .time).let { SHORT_DATE.format(it) },
             ),
             limit,
         ).map { group ->
