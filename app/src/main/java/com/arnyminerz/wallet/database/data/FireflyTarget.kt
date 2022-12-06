@@ -10,21 +10,21 @@ data class FireflyTarget(
     val id: Long,
     val name: String,
     val iban: String?,
-    val type: String,
+    val type: FireflyTargetType,
 ): JsonSerializable() {
     companion object: FireflyJsonSerializer<FireflyTarget>, JsonSerializer<FireflyTarget> {
         override fun fromJson(json: JSONObject, prefix: String): FireflyTarget = FireflyTarget(
             json.getLong("${prefix}_id"),
             json.getString("${prefix}_name"),
             json.getStringOrNull("${prefix}_iban"),
-            json.getString("${prefix}_type"),
+            json.getString("${prefix}_type").let { FireflyTargetType.parse(it)!! },
         )
 
         override fun fromJson(json: JSONObject): FireflyTarget = FireflyTarget(
             json.getLong("id"),
             json.getString("name"),
             json.getStringOrNull("iban"),
-            json.getString("type"),
+            json.getString("type").let { FireflyTargetType.parse(it)!! },
         )
     }
 
@@ -32,6 +32,6 @@ data class FireflyTarget(
         put("id", id)
         put("name", name)
         put("iban", iban)
-        put("type", type)
+        put("type", type.type)
     }
 }
