@@ -1,8 +1,6 @@
 package com.arnyminerz.wallet.activity
 
-import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -10,24 +8,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
-import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.account.AccountHelper
 import com.arnyminerz.wallet.account.AuthCode
 import com.arnyminerz.wallet.model.MainViewModel
@@ -40,7 +26,6 @@ import com.arnyminerz.wallet.ui.theme.setContentThemed
 import com.arnyminerz.wallet.utils.doAsync
 import com.arnyminerz.wallet.utils.getPreference
 import com.arnyminerz.wallet.utils.popPreference
-import com.arnyminerz.wallet.utils.ui
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -58,6 +43,7 @@ import timber.log.Timber
     ExperimentalMaterial3Api::class,
     ExperimentalAnimationApi::class,
     ExperimentalComposeUiApi::class,
+    ExperimentalFoundationApi::class,
 )
 class MainActivity : AppCompatActivity() {
     companion object {
