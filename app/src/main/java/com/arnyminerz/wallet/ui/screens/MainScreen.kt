@@ -1,10 +1,9 @@
 package com.arnyminerz.wallet.ui.screens
 
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.List
@@ -48,6 +47,7 @@ private val pages = mapOf(
 @Composable
 @ExperimentalPagerApi
 @ExperimentalMaterial3Api
+@ExperimentalFoundationApi
 fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
     pkPassPicker: ActivityResultLauncher<String>? = null,
@@ -111,16 +111,14 @@ fun MainScreen(
                     Timber.i("Loading pass...")
                     PassViewer(pass = mainViewModel.pass!!)
                 } else Timber.i("Bitmap and/or barcode are null.")
-                PAGE_MONEY -> Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                ) {
-                    Button(
+                PAGE_MONEY -> Column {
+                    /*Button(
                         onClick = {
                             navController?.navigate("AddAccount")
                         }
                     ) {
                         Text("Add account")
-                    }
+                    }*/
                     if (accounts.isNotEmpty())
                         FireflyDashboard(mainViewModel, accounts.first())
                 }
