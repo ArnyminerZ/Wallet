@@ -1,5 +1,6 @@
 package com.arnyminerz.wallet.database.data
 
+import com.arnyminerz.wallet.utils.Sampleable
 import com.arnyminerz.wallet.utils.serializer.JsonSerializable
 import com.arnyminerz.wallet.utils.serializer.JsonSerializer
 import com.arnyminerz.wallet.utils.serializer.putSerializable
@@ -13,7 +14,15 @@ data class FireflySummary(
     val leftToSpend: FireflySummaryEntry?,
     val netWorth: FireflySummaryEntry,
 ): JsonSerializable() {
-    companion object: JsonSerializer<FireflySummary> {
+    companion object: JsonSerializer<FireflySummary>, Sampleable<FireflySummary> {
+        override val SAMPLE: FireflySummary = FireflySummary(
+            FireflySummaryEntry.SAMPLE,
+            FireflySummaryEntry.SAMPLE.copy(value = -318.0),
+            FireflySummaryEntry.SAMPLE,
+            FireflySummaryEntry.SAMPLE,
+            FireflySummaryEntry.SAMPLE,
+        )
+
         fun fromFirefly(json: JSONObject) = FireflySummary(
             json.keys().asSequence().find { it.startsWith("balance-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.Balance) },
             json.keys().asSequence().find { it.startsWith("spent-") }!!.let { FireflySummaryEntry.fromSummaryJson(json.getJSONObject(it), MetadataOptions.Spent) },

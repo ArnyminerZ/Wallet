@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import com.arnyminerz.wallet.utils.Sampleable
 import com.arnyminerz.wallet.utils.serializer.FireflyJsonSerializer
 import com.arnyminerz.wallet.utils.serializer.JsonSerializer
 import org.json.JSONObject
@@ -20,7 +21,15 @@ data class FireflyCurrency(
     val decimalPlaces: Long,
     val default: Boolean,
 ) : FireflyObject(id) {
-    companion object : JsonSerializer<FireflyCurrency>, FireflyJsonSerializer<FireflyCurrency> {
+    companion object : JsonSerializer<FireflyCurrency>, FireflyJsonSerializer<FireflyCurrency>, Sampleable<FireflyCurrency> {
+        override val SAMPLE: FireflyCurrency = FireflyCurrency(
+            0,
+            "EUR",
+            "€",
+            2,
+            true,
+        )
+
         override fun fromJson(json: JSONObject): FireflyCurrency = FireflyCurrency(
             json.getLong("id"),
             json.getString("code"),

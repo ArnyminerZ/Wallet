@@ -8,7 +8,7 @@ import java.util.*
 data class FireflyTransaction(
     val user: Long,
     val id: Long,
-    val type: String,
+    val type: TransactionType,
     val date: Date,
     val order: Long,
     val currency: FireflyCurrency,
@@ -38,11 +38,45 @@ data class FireflyTransaction(
     val invoiceDate: Date?,
     val geoRef: FireflyGeoRef?,
 ) : JsonSerializable() {
-    companion object : FireflyJsonSerializer<FireflyTransaction>, JsonSerializer<FireflyTransaction> {
+    companion object : FireflyJsonSerializer<FireflyTransaction>, JsonSerializer<FireflyTransaction>, Sampleable<FireflyTransaction> {
+        override val SAMPLE: FireflyTransaction = FireflyTransaction(
+            0L,
+            0L,
+            TransactionType.WITHDRAWAL,
+            Date(),
+            0,
+            FireflyCurrency.SAMPLE,
+            46.48,
+            null,
+            null,
+            "Groceries",
+            FireflyTarget(0, "Bank account", null, FireflyTargetType.AssetAccount),
+            FireflyTarget(1, "Store", null, FireflyTargetType.ExpenseAccount),
+            null,
+            null,
+            null,
+            false,
+            null,
+            emptyList(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        )
+
         override fun fromJson(json: JSONObject, prefix: String): FireflyTransaction = FireflyTransaction(
             json.getLong("user"),
             json.getLong("transaction_journal_id"),
-            json.getString("type"),
+            json.getString("type").let { TransactionType.parse(it)!! },
             json.getDate("date", FIREFLY_DATE_FORMATTER),
             json.getLong("order"),
             json.serializeInline(FireflyCurrency.Companion, "currency"),
@@ -76,7 +110,7 @@ data class FireflyTransaction(
         override fun fromJson(json: JSONObject): FireflyTransaction = FireflyTransaction(
             json.getLong("user"),
             json.getLong("id"),
-            json.getString("type"),
+            json.getString("type").let { TransactionType.parse(it)!! },
             json.getDate("date", FIREFLY_DATE_FORMATTER),
             json.getLong("order"),
             json.getSerializable("currency", FireflyCurrency.Companion),
@@ -118,7 +152,7 @@ data class FireflyTransaction(
     override val toJson: JSONObject.() -> Unit = {
         put("user", user)
         put("id", id)
-        put("type", type)
+        put("type", type.type)
         putDate("date", date, FIREFLY_DATE_FORMATTER)
         put("order", order)
         putSerializable("currency", currency)
