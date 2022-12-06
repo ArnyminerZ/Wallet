@@ -5,11 +5,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Cloud
-import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.ConfirmationNumber
+import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Cloud
-import androidx.compose.material.icons.rounded.List
+import androidx.compose.material.icons.rounded.ConfirmationNumber
+import androidx.compose.material.icons.rounded.Wallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,8 +36,8 @@ const val PAGE_MONEY = 0
 const val PAGE_PASSES = 1
 
 private val pages = mapOf(
-    PAGE_MONEY to ((Icons.Rounded.Cloud to Icons.Outlined.Cloud) to R.string.appbar_cloud),
-    PAGE_PASSES to ((Icons.Rounded.List to Icons.Outlined.List) to R.string.appbar_list),
+    PAGE_MONEY to ((Icons.Rounded.Wallet to Icons.Outlined.Wallet) to R.string.appbar_cloud),
+    PAGE_PASSES to ((Icons.Rounded.ConfirmationNumber to Icons.Outlined.ConfirmationNumber) to R.string.appbar_list),
 )
 
 @Preview(
@@ -87,8 +87,8 @@ fun MainScreen(
                     FloatingActionButton(
                         onClick = {
                             when (pagerState.currentPage) {
-                                0 -> pkPassPicker?.launch("application/*")
-                                1 -> navController?.navigate(MainActivity.SCREEN_NEW_TRANSACTION)
+                                PAGE_PASSES -> pkPassPicker?.launch("application/*")
+                                PAGE_MONEY -> navController?.navigate(MainActivity.SCREEN_NEW_TRANSACTION)
                             }
                         },
                     ) {
