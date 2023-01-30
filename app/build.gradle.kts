@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.arnyminerz.wallet"
-        minSdk = 21
+        minSdk = 22
         targetSdk = 33
         versionCode = 1
         versionName = "1.0.0"

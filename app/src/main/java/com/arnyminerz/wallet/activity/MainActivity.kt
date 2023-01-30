@@ -1,5 +1,6 @@
 package com.arnyminerz.wallet.activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +26,7 @@ import com.arnyminerz.wallet.ui.screens.*
 import com.arnyminerz.wallet.ui.theme.setContentThemed
 import com.arnyminerz.wallet.utils.doAsync
 import com.arnyminerz.wallet.utils.getPreference
+import com.arnyminerz.wallet.utils.launch
 import com.arnyminerz.wallet.utils.popPreference
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -52,7 +54,6 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_ADDING_NEW_ACCOUNT = "adding_new_account"
 
         const val SCREEN_HOME = "Home"
-        const val SCREEN_ADD_ACCOUNT = "AddAccount"
         const val SCREEN_NEW_ACCOUNT = "NewAccount"
         const val SCREEN_NEW_TRANSACTION = "NewTransaction"
     }
@@ -79,10 +80,11 @@ class MainActivity : AppCompatActivity() {
 
         ah = AccountHelper.getInstance(this)
 
-        accountIndex = intent.extras?.getInt(EXTRA_ACCOUNT_INDEX, -1) ?: -1
         val addingNewAccount = intent.extras?.getBoolean(EXTRA_ADDING_NEW_ACCOUNT, false) ?: false
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        if (addingNewAccount) launch(AddAccountActivity::class)
 
         setContentThemed {
             navController = rememberAnimatedNavController()
@@ -94,7 +96,6 @@ class MainActivity : AppCompatActivity() {
             AnimatedNavHost(
                 navController = navController,
                 startDestination = when {
-                    addingNewAccount -> SCREEN_ADD_ACCOUNT
                     accountIndex > 0 -> SCREEN_NEW_ACCOUNT
                     else -> SCREEN_HOME
                 },
@@ -117,13 +118,6 @@ class MainActivity : AppCompatActivity() {
                     popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
                 ) { MainScreen(mainViewModel, picker, navController, mainPagerState) }
                 composable(
-                    SCREEN_ADD_ACCOUNT,
-                    enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
-                    exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
-                    popEnterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
-                    popExitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right, animationSpec = tween(700)) },
-                ) { LoginScreen() }
-                composable(
                     SCREEN_NEW_ACCOUNT,
                     enterTransition = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
                     exitTransition = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left, animationSpec = tween(700)) },
@@ -144,6 +138,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        accountIndex = intent.extras?.getInt(EXTRA_ACCOUNT_INDEX, -1) ?: -1
+
         val job = if (accountIndex > 0) doAsync {
             val authCodes = (getPreference(authCodes).first() ?: emptySet()).toList()
             val authCode = JSONObject(authCodes[accountIndex])
@@ -156,8 +152,8 @@ class MainActivity : AppCompatActivity() {
                 mainPagerState.animateScrollToPage(PAGE_MONEY)
             }
             accountIndex = -1
-        } else doAsync { }
-        job.invokeOnCompletion {
+        } else null
+        job?.invokeOnCompletion {
             doAsync {
                 popPreference(tempServer)
                 popPreference(tempClientId)

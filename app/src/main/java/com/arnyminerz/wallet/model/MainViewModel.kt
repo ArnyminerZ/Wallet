@@ -4,14 +4,17 @@ import android.accounts.Account
 import android.app.Application
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import com.arnyminerz.wallet.account.AccountHelper
 import com.arnyminerz.wallet.database.data.FireflyTransaction
 import com.arnyminerz.wallet.database.local.AppDatabase
 import com.arnyminerz.wallet.database.remote.api
+import com.arnyminerz.wallet.model.provider.AccountsProvider
 import com.arnyminerz.wallet.pkpass.Parser
 import com.arnyminerz.wallet.pkpass.data.Pass
 import com.arnyminerz.wallet.pkpass.data.PassAspect
@@ -24,7 +27,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.*
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel(application: Application) : AndroidViewModel(application), AccountsProvider {
     /**
      * Stores the [Parser] instance that gets loaded by [loadPkPass].
      * @author Arnau Mora
@@ -47,7 +50,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val currenciesDao = database.currenciesDao()
     private val categoriesDao = database.categoriesDao()
 
-    val accounts = ah.accountsLive
+    override val selectedAccount: MutableState<Int> = mutableStateOf(0)
+
+    override val accounts: LiveData<Array<out Account>> = ah.accountsLive
 
     val storedAccounts = accountsDao.getAllLive()
 
@@ -152,4 +157,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         end: Date? = null,
         callback: (transactions: List<FireflyTransaction>) -> Unit,
     ) = launch { account.api(getApplication()).getTransactions(limit, start, end).also(callback) }
+
+    /**
+     * Removes the given account from the account manager.
+     * @author Arnau Mora
+     * @since 20220130
+     * @param account The account to be deleted.
+     */
+    fun removeAccount(account: Account) = launch {
+        ah.removeAccount(account)
+    }
 }

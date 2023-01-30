@@ -15,8 +15,15 @@
     <string name="trip_type_train">Train trip</string>
 
     <string name="title_add_account">Add Account</string>
+    <string name="title_accounts">Accounts</string>
     <string name="title_scan_code">Scan QR Code</string>
     <string name="title_server_configuration">Server Configuration</string>
+
+    <!-- Content description for the account selection indicator in the accounts dialog -->
+    <string name="accounts_selected">Account Selected</string>
+
+    <!-- A generic string describing an action to delete something. -->
+    <string name="action_delete">Delete</string>
     
     <string name="login_email">Email</string>
     <string name="login_password">Password</string>

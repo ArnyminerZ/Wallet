@@ -52,8 +52,8 @@ fun ServerConfigurationPage(modifier: Modifier) {
     val clientSecretRequester = FocusRequester()
 
     var server by remember { mutableStateOf("https://firefly.arnyminerz.com") }
-    var clientId by remember { mutableStateOf("12") }
-    var clientSecret by remember { mutableStateOf("XaozykURC7MqjyuYwZ39iecZ1PbGhkhzlPnet54d") }
+    var clientId by remember { mutableStateOf("4") }
+    var clientSecret by remember { mutableStateOf("4L5fOUbEAyrYTRhuET69SKQ5is7yjVRLPrTylAix") }
 
     val addServer: () -> Unit = {
         fieldsEnabled = false

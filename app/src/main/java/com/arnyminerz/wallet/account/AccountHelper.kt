@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import androidx.annotation.MainThread
+import androidx.annotation.RequiresPermission
 import androidx.annotation.WorkerThread
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.LiveData
@@ -35,6 +36,7 @@ import timber.log.Timber
 import java.io.IOException
 import java.net.URL
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -140,6 +142,10 @@ class AccountHelper private constructor(context: Context) : OnAccountsUpdateList
         am.setUserData(account, "code", authCode.code)
         am.setAuthToken(account, BuildConfig.ACCOUNT_TYPE, accessToken)
     }
+
+    @WorkerThread
+    @RequiresPermission(value = "android.permission.AUTHENTICATE_ACCOUNTS")
+    fun removeAccount(account: Account) = am.removeAccountExplicitly(account)
 
     @WorkerThread
     suspend fun login(
