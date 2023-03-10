@@ -1,6 +1,7 @@
 package com.arnyminerz.wallet.ui.elements
 
-import android.graphics.Color
+import android.provider.Settings.System
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,30 +20,33 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.arnyminerz.wallet.R
-import com.arnyminerz.wallet.pkpass.data.Barcode
-import com.arnyminerz.wallet.pkpass.data.Field
 import com.arnyminerz.wallet.pkpass.data.Pass
-import com.arnyminerz.wallet.pkpass.data.PassAspect
-import com.arnyminerz.wallet.pkpass.data.boarding.BoardingData
-import com.arnyminerz.wallet.pkpass.data.boarding.TransitType
 import com.arnyminerz.wallet.pkpass.data.boarding.icon
 import com.arnyminerz.wallet.pkpass.data.boarding.tripTypeStringRes
 import com.arnyminerz.wallet.pkpass.data.getField
 import com.arnyminerz.wallet.ui.preview.PassViewerProvider
+import kotlinx.coroutines.flow.distinctUntilChanged
+import timber.log.Timber
 
 @Preview
 @Composable
@@ -50,10 +54,13 @@ import com.arnyminerz.wallet.ui.preview.PassViewerProvider
 fun PassViewer(
     @PreviewParameter(PassViewerProvider::class) pass: Pass,
     modifier: Modifier = Modifier,
+    initialBrightness: Int = 0,
     actions: (@Composable RowScope.() -> Unit)? = null,
     colors: CardColors = CardDefaults.cardColors(),
+    storeOldBrightness: (Int) -> Unit = {},
 ) {
     val inspectionMode = LocalInspectionMode.current
+    val context = LocalContext.current
 
     Card(
         modifier = modifier,
@@ -175,7 +182,30 @@ fun PassViewer(
                 }
             }
 
-            if (pass.barcode != null)
+            if (pass.barcode != null) {
+                var barcodeExpanded by remember { mutableStateOf(false) }
+                val barcodeSize by animateDpAsState(if (barcodeExpanded) 300.dp else 150.dp)
+                var oldBrightness by remember { mutableStateOf(initialBrightness) }
+
+                LaunchedEffect(barcodeExpanded) {
+                    snapshotFlow { barcodeExpanded }
+                        .collect {
+                            val brightness = if (it) {
+                                oldBrightness = System.getInt(context.contentResolver, System.SCREEN_BRIGHTNESS)
+                                storeOldBrightness(oldBrightness)
+                                255
+                            } else
+                                initialBrightness
+
+                            Timber.i("Changing brightness to $brightness")
+                            System.putInt(
+                                context.contentResolver,
+                                System.SCREEN_BRIGHTNESS,
+                                brightness,
+                            )
+                        }
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -183,6 +213,7 @@ fun PassViewer(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Card(
+                        onClick = { barcodeExpanded = !barcodeExpanded },
                         colors = CardDefaults.elevatedCardColors(
                             containerColor = androidx.compose.ui.graphics.Color.White,
                         ),
@@ -205,7 +236,7 @@ fun PassViewer(
                                     pass.barcode.altText,
                                     contentScale = ContentScale.Fit,
                                     modifier = Modifier
-                                        .size(150.dp),
+                                        .size(barcodeSize),
                                 )
                             Text(
                                 text = pass.barcode.altText,
@@ -215,6 +246,7 @@ fun PassViewer(
                         }
                     }
                 }
+            }
             actions?.let {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

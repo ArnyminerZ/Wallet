@@ -1,12 +1,15 @@
 package com.arnyminerz.wallet
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.provider.Settings.System
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -16,8 +19,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.LocalActivity
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -26,21 +27,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberStandardBottomSheetState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -52,9 +45,9 @@ import com.arnyminerz.wallet.ui.view.PassesViewer
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -66,12 +59,16 @@ class MainActivity : AppCompatActivity() {
             mainViewModel.loadPkPass(uri)
         }
 
+    private var initialBrightnessLevel: Int = 255
+
     @OptIn(
         ExperimentalPagerApi::class,
         ExperimentalMaterial3Api::class,
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        initialBrightnessLevel = System.getInt(contentResolver, System.SCREEN_BRIGHTNESS)
 
         handleIntent()
 
@@ -85,7 +82,14 @@ class MainActivity : AppCompatActivity() {
                 var showingPass by remember { mutableStateOf<Pass?>(null) }
                 if (showingPass != null)
                     ModalBottomSheet(
-                        onDismissRequest = { showingPass = null },
+                        onDismissRequest = {
+                            System.putInt(
+                                contentResolver,
+                                System.SCREEN_BRIGHTNESS,
+                                initialBrightnessLevel,
+                            )
+                            showingPass = null
+                        },
                         sheetState = bottomSheetState,
                     ) {
                         showingPass?.let { pass ->
@@ -95,7 +99,11 @@ class MainActivity : AppCompatActivity() {
                                     containerColor = MaterialTheme.colorScheme.surface,
                                     contentColor = MaterialTheme.colorScheme.onSurface,
                                 ),
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
+                                initialBrightness = initialBrightnessLevel,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 32.dp),
+                                storeOldBrightness = { initialBrightnessLevel = it }
                             )
                         }
                     }
@@ -166,5 +174,17 @@ class MainActivity : AppCompatActivity() {
         if (intent.data == null) return
 
         Timber.i("Uri: ${intent.data}")
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(this)) {
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
+            }
+        }
     }
 }
