@@ -244,7 +244,7 @@ fun PassViewer(
                 ) {
                     Card(
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            containerColor = androidx.compose.ui.graphics.Color.White,
                         ),
                     ) {
                         Column(
