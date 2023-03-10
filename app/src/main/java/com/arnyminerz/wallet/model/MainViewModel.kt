@@ -99,6 +99,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         boardingPass.getFields("auxiliaryFields"),
                         boardingPass.getFields("backFields"),
                     ),
+                    icon = parser.getIcon(),
                 )
                 dao.insert(pass)
             }

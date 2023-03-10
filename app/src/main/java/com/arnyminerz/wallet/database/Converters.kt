@@ -2,6 +2,7 @@ package com.arnyminerz.wallet.database
 
 import androidx.room.TypeConverter
 import com.arnyminerz.wallet.pkpass.data.Barcode
+import com.arnyminerz.wallet.pkpass.data.Icon
 import com.arnyminerz.wallet.pkpass.data.PassAspect
 import com.arnyminerz.wallet.pkpass.data.boarding.BoardingData
 import org.json.JSONObject
@@ -21,4 +22,9 @@ class Converters {
     fun fromBoardingData(value: BoardingData?): String? = value?.toJSON()?.toString()
     @TypeConverter
     fun toBoardingData(value: String?): BoardingData? = value?.let { BoardingData.fromJSON(JSONObject(it)) }
+
+    @TypeConverter
+    fun fromIcon(value: Icon?): String? = value?.toJSON()?.toString()
+    @TypeConverter
+    fun toIcon(value: String?): Icon? = value?.let { Icon.fromJSON(JSONObject(it)) }
 }

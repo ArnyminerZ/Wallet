@@ -17,4 +17,5 @@ data class Pass(
     val aspect: PassAspect?,
     val barcode: Barcode?,
     val boardingData: BoardingData?,
+    val icon: Icon?,
 )

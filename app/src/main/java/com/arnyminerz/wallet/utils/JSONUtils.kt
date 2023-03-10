@@ -1,9 +1,13 @@
 package com.arnyminerz.wallet.utils
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
+import android.util.Base64
 import androidx.annotation.ColorInt
 import com.arnyminerz.wallet.pkpass.data.Field
+import java.io.ByteArrayOutputStream
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -91,6 +95,20 @@ fun JSONObject.getFields(key: String): List<Field> {
         )
     }
     return fields
+}
+
+fun JSONObject.putBitmap(key: String, bitmap: Bitmap) {
+    val outputStream = ByteArrayOutputStream()
+    bitmap.compress(BITMAP_WEBP, 100, outputStream)
+    val bytes = outputStream.toByteArray()
+    val encoded = Base64.encodeToString(bytes, Base64.DEFAULT)
+    put(key, encoded)
+}
+
+fun JSONObject.getBitmap(key: String): Bitmap {
+    val encoded = getStringOrNull(key)
+    val bytes = Base64.decode(encoded, Base64.DEFAULT)
+    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 }
 
 fun JSONObject.getStringOrNull(key: String): String? = try {

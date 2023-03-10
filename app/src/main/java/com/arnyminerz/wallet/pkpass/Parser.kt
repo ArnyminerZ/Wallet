@@ -2,8 +2,10 @@ package com.arnyminerz.wallet.pkpass
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.pkpass.data.Barcode
+import com.arnyminerz.wallet.pkpass.data.Icon
 import com.arnyminerz.wallet.utils.fs.HashUtils
 import com.arnyminerz.wallet.utils.fs.MessageDigestAlgorithm
 import com.arnyminerz.wallet.utils.fs.unzip
@@ -92,5 +94,13 @@ class Parser(context: Context, pkpass: InputStream) {
                 ?: throw IllegalStateException("The barcode does not have a valid format: ${barcode.format}"),
             R.dimen.barcode_size,
         )
+    }
+
+    fun getIcon(): Icon {
+        val iconFile = getFile("icon.png")
+        val icon = iconFile.inputStream().use { BitmapFactory.decodeStream(it) }
+        val icon2xFile = getFile("icon@2x.png")
+        val icon2x = icon2xFile.inputStream().use { BitmapFactory.decodeStream(it) }
+        return Icon(icon, icon2x)
     }
 }

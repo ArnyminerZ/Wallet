@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,70 +42,7 @@ import com.arnyminerz.wallet.pkpass.data.boarding.TransitType
 import com.arnyminerz.wallet.pkpass.data.boarding.icon
 import com.arnyminerz.wallet.pkpass.data.boarding.tripTypeStringRes
 import com.arnyminerz.wallet.pkpass.data.getField
-
-class PassViewerProvider : PreviewParameterProvider<Pass> {
-    override val values: Sequence<Pass>
-        get() = sequenceOf(
-            Pass(
-                0,
-                true,
-                1,
-                "pass.com.renfe-RenfeTicket",
-                "00UJU5JU7593101237034",
-                "H9VY2F2XZA",
-                "Renfe",
-                "Billete de tren",
-                PassAspect(
-                    Color.rgb(204, 0, 153),
-                    Color.rgb(99, 99, 99),
-                    Color.rgb(212, 212, 212),
-                ),
-                Barcode(
-                    "7593101237034650006901126052214415000000030UJU5JU..00000",
-                    "PKBarcodeFormatQR",
-                    "utf-8",
-                    "7593101237034"
-                ),
-                BoardingData(
-                    TransitType.valueOf("PKTransitTypeTrain"),
-                    listOf(
-                        Field(
-                            "destinofecha",
-                            "Viaje a: ALCOY/ALCO",
-                            "26/05/2022",
-                        ),
-                    ),
-                    listOf(
-                        Field(
-                            "boardingTime",
-                            "VALENC.NOR",
-                            "12:34",
-                            "La hora de salida ha cambiado a %@",
-                        ),
-                        Field(
-                            "destino",
-                            "ALCOY/ALCO",
-                            "15:04",
-                        )
-                    ),
-                    listOf(
-                        Field(
-                            "pasajero",
-                            "Pasajero",
-                            "A.MORA",
-                        ),
-                        Field(
-                            "localizador",
-                            "Localizador",
-                            "UJU5JU"
-                        )
-                    ),
-                    listOf(),
-                    listOf(),
-                )
-            )
-        )
-}
+import com.arnyminerz.wallet.ui.preview.PassViewerProvider
 
 @Preview
 @Composable
@@ -113,11 +51,13 @@ fun PassViewer(
     @PreviewParameter(PassViewerProvider::class) pass: Pass,
     modifier: Modifier = Modifier,
     actions: (@Composable RowScope.() -> Unit)? = null,
+    colors: CardColors = CardDefaults.cardColors(),
 ) {
     val inspectionMode = LocalInspectionMode.current
 
     Card(
         modifier = modifier,
+        colors = colors,
     ) {
         Column(
             modifier = Modifier

@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,14 +17,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +41,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.wallet.R
 import com.arnyminerz.wallet.pkpass.data.Pass
+import com.arnyminerz.wallet.pkpass.data.boarding.BoardingData
+import com.arnyminerz.wallet.ui.elements.PassExtendedInfoView
+import com.arnyminerz.wallet.ui.elements.PassItem
 import com.arnyminerz.wallet.ui.elements.PassViewer
 
 private const val OPERATION_NONE = 0
@@ -47,14 +55,12 @@ private const val OPERATION_DELETE = 2
 fun PassesViewer(
     passes: List<Pass>,
     filterArchived: Boolean,
-    paddingValues: PaddingValues,
+    onView: (Pass) -> Unit,
     onArchive: (Pass) -> Unit,
     onDelete: (Pass) -> Unit,
 ) {
     LazyColumn(
-        Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+        Modifier.fillMaxSize()
     ) {
         val items = if (filterArchived)
             passes.filter { it.archived }
@@ -92,18 +98,40 @@ fun PassesViewer(
                     },
                 )
 
+            var showingBoardingData by remember { mutableStateOf<BoardingData?>(null) }
+            if (showingBoardingData != null)
+                ModalBottomSheet(
+                    onDismissRequest = { showingBoardingData = null },
+                    sheetState = rememberModalBottomSheetState(false),
+                ) {
+                    showingBoardingData?.let { boardingData ->
+                        PassExtendedInfoView(boardingData = boardingData)
+                    }
+                }
 
             AnimatedVisibility(
                 visibleState = animVisibleState,
                 enter = fadeIn(tween(durationMillis = 200)),
                 exit = slideOutHorizontally(tween(200)) { if (filterArchived) -it else it }
             ) {
-                PassViewer(
+                PassItem(
                     pass = pass,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable { onView(pass) },
                     actions = {
+                        pass.boardingData?.let { boardingData ->
+                            IconButton(
+                                onClick = { showingBoardingData = boardingData },
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    stringResource(R.string.action_info),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
                         IconButton(
                             onClick = { isDeleting = true },
                         ) {

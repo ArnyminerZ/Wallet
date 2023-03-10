@@ -9,12 +9,20 @@
     <string name="action_unarchive">Unarchive</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_info">Information</string>
 
     <string name="trip_type_air">Air trip</string>
     <string name="trip_type_boat">Boat trip</string>
     <string name="trip_type_bus">Bus trip</string>
     <string name="trip_type_generic">Generic trip</string>
     <string name="trip_type_train">Train trip</string>
+
+    <string name="pass_boarding_time">Boarding Time: %s</string>
+    <string name="pass_boarding_header">Header</string>
+    <string name="pass_boarding_primary">Primary Information</string>
+    <string name="pass_boarding_secondary">Secondary Information</string>
+    <string name="pass_boarding_auxiliary">Auxiliary Information</string>
+    <string name="pass_boarding_back">Back Information</string>
 
     <string name="archived">Archived</string>
 

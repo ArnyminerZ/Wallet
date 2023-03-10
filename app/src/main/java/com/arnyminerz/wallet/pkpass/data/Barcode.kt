@@ -8,7 +8,9 @@ import androidx.room.Ignore
 import com.arnyminerz.wallet.utils.BITMAP_WEBP
 import com.arnyminerz.wallet.utils.JsonSerializable
 import com.arnyminerz.wallet.utils.JsonSerializer
+import com.arnyminerz.wallet.utils.getBitmap
 import com.arnyminerz.wallet.utils.getStringOrNull
+import com.arnyminerz.wallet.utils.putBitmap
 import com.google.zxing.BarcodeFormat
 import java.io.ByteArrayOutputStream
 import org.json.JSONObject
@@ -26,9 +28,7 @@ data class Barcode(
             json.getString("messageEncoding"),
             json.getString("altText"),
         ).apply {
-            val encoded = json.getStringOrNull("bitmap")
-            val bytes = Base64.decode(encoded, Base64.DEFAULT)
-            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            bitmap = json.getBitmap("bitmap")
         }
     }
 
@@ -47,11 +47,7 @@ data class Barcode(
         put("messageEncoding", messageEncoding)
         put("altText", altText)
         bitmap?.let { image ->
-            val outputStream = ByteArrayOutputStream()
-            image.compress(BITMAP_WEBP, 100, outputStream)
-            val bytes = outputStream.toByteArray()
-            val encoded = Base64.encodeToString(bytes, Base64.DEFAULT)
-            put("bitmap", encoded)
+            putBitmap("bitmap", image)
         }
     }
 }
