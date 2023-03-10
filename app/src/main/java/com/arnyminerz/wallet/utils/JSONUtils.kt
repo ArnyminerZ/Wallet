@@ -4,7 +4,17 @@ import android.graphics.Color
 import android.os.Build
 import androidx.annotation.ColorInt
 import com.arnyminerz.wallet.pkpass.data.Field
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
+
+interface JsonSerializable {
+    fun toJSON(): JSONObject
+}
+
+interface JsonSerializer <T: Any> {
+    fun fromJSON(json: JSONObject): T
+}
 
 @ColorInt
 fun JSONObject.getColor(key: String): Int {
@@ -81,4 +91,30 @@ fun JSONObject.getFields(key: String): List<Field> {
         )
     }
     return fields
+}
+
+fun JSONObject.getStringOrNull(key: String): String? = try {
+    if (has(key))
+        getString(key)
+    else
+        null
+} catch (e: JSONException) {
+    null
+}
+
+fun JSONObject.getIntOrNull(key: String): Int? = try {
+    if (has(key))
+        getInt(key)
+    else
+        null
+} catch (e: JSONException) {
+    null
+}
+
+fun <T> List<T>.toJSONArray(mapper: (T) -> JSONObject): JSONArray = JSONArray().apply {
+    (indices).forEach { put(mapper(this@toJSONArray[it])) }
+}
+
+fun <T> JSONArray.map(mapper: (JSONObject) -> T): List<T> = (0 until length()).map {
+    mapper(getJSONObject(it))
 }

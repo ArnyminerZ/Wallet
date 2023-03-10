@@ -5,9 +5,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +46,8 @@ class PassViewerProvider : PreviewParameterProvider<Pass> {
     override val values: Sequence<Pass>
         get() = sequenceOf(
             Pass(
+                0,
+                true,
                 1,
                 "pass.com.renfe-RenfeTicket",
                 "00UJU5JU7593101237034",
@@ -106,12 +111,13 @@ class PassViewerProvider : PreviewParameterProvider<Pass> {
 @ExperimentalMaterial3Api
 fun PassViewer(
     @PreviewParameter(PassViewerProvider::class) pass: Pass,
+    modifier: Modifier = Modifier,
+    actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val inspectionMode = LocalInspectionMode.current
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = modifier,
     ) {
         Column(
             modifier = Modifier
@@ -121,25 +127,38 @@ fun PassViewer(
             val boardingData = pass.boardingData
             if (boardingData != null) {
                 val transitType = boardingData.transitType
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                ) {
-                    val header = boardingData
-                        .headerFields
-                        .firstOrNull()
-                    Text(
-                        text = header?.label
-                            ?: stringResource(transitType.tripTypeStringRes),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = header?.value ?: "",
-                        style = MaterialTheme.typography.labelLarge,
-                    )
+                
+                // Header row
+                Row {
+                    // Archived icon
+                    if (pass.archived)
+                        Icon(
+                            Icons.Rounded.Archive,
+                            stringResource(R.string.archived),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+
+                    // Right column
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier
+                            .weight(1f),
+                    ) {
+                        val header = boardingData
+                            .headerFields
+                            .firstOrNull()
+                        Text(
+                            text = header?.label
+                                ?: stringResource(transitType.tripTypeStringRes),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = header?.value ?: "",
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
                 Row(
                     modifier = Modifier
@@ -256,10 +275,11 @@ fun PassViewer(
                         }
                     }
                 }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-
+            actions?.let {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    content = it,
+                )
             }
         }
     }

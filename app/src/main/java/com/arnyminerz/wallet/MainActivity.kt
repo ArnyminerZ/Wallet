@@ -1,12 +1,17 @@
 package com.arnyminerz.wallet
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.List
@@ -20,9 +25,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.arnyminerz.wallet.model.MainViewModel
 import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.arnyminerz.wallet.ui.theme.WalletTheme
@@ -37,10 +45,9 @@ class MainActivity : AppCompatActivity() {
     private val mainViewModel by viewModels<MainViewModel>()
 
     private val picker =
-        registerForActivityResult(ActivityResultContracts.GetContent()) {
-            mainViewModel.loadPkPass(
-                it
-            )
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri == null) return@registerForActivityResult
+            mainViewModel.loadPkPass(uri)
         }
 
     @OptIn(
@@ -100,15 +107,24 @@ class MainActivity : AppCompatActivity() {
                         count = 2,
                         state = pagerState,
                     ) { page ->
-                        Text(
-                            text = "Hello world from page $page!",
-                            modifier = Modifier.padding(paddingValues)
-                        )
-                        if (page == 0)
-                            if (mainViewModel.pass != null) {
-                                Timber.i("Loading pass...")
-                                PassViewer(pass = mainViewModel.pass!!)
-                            } else Timber.i("Bitmap and/or barcode are null.")
+                        when(page) {
+                            0 -> {
+                                val passes by mainViewModel.passes.observeAsState(emptyList())
+                                LazyColumn(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(paddingValues)) {
+                                    items(passes) { pass ->
+                                        PassViewer(
+                                            pass = pass,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

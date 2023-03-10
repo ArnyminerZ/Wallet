@@ -11,4 +11,6 @@
     <string name="trip_type_bus">Bus trip</string>
     <string name="trip_type_generic">Generic trip</string>
     <string name="trip_type_train">Train trip</string>
+
+    <string name="archived">Archived</string>
 </resources>
