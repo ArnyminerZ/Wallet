@@ -13,16 +13,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.LocalActivity
+import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Cloud
+import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.List
+import androidx.compose.material.icons.rounded.LocalActivity
+import androidx.compose.material.icons.rounded.Unarchive
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -34,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.arnyminerz.wallet.model.MainViewModel
 import com.arnyminerz.wallet.ui.elements.PassViewer
 import com.arnyminerz.wallet.ui.theme.WalletTheme
+import com.arnyminerz.wallet.ui.view.PassesViewer
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -66,25 +76,25 @@ class MainActivity : AppCompatActivity() {
                         BottomAppBar(
                             actions = {
                                 IconButton(
-                                    onClick = { scope.launch { pagerState.scrollToPage(0) } },
+                                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
                                 ) {
                                     Icon(
                                         imageVector = if (pagerState.currentPage == 0)
-                                            Icons.Rounded.List
+                                            Icons.Rounded.LocalActivity
                                         else
-                                            Icons.Outlined.List,
+                                            Icons.Outlined.LocalActivity,
                                         contentDescription = stringResource(R.string.appbar_list)
                                     )
                                 }
                                 IconButton(
-                                    onClick = { scope.launch { pagerState.scrollToPage(1) } },
+                                    onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
                                 ) {
                                     Icon(
                                         imageVector = if (pagerState.currentPage == 1)
-                                            Icons.Rounded.Cloud
+                                            Icons.Rounded.Inventory2
                                         else
-                                            Icons.Outlined.Cloud,
-                                        contentDescription = stringResource(R.string.appbar_cloud)
+                                            Icons.Outlined.Inventory2,
+                                        contentDescription = stringResource(R.string.appbar_archive)
                                     )
                                 }
                             },
@@ -107,24 +117,14 @@ class MainActivity : AppCompatActivity() {
                         count = 2,
                         state = pagerState,
                     ) { page ->
-                        when(page) {
-                            0 -> {
-                                val passes by mainViewModel.passes.observeAsState(emptyList())
-                                LazyColumn(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .padding(paddingValues)) {
-                                    items(passes) { pass ->
-                                        PassViewer(
-                                            pass = pass,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        val passes by mainViewModel.passes.observeAsState(emptyList())
+                        PassesViewer(
+                            passes = passes,
+                            filterArchived = page == 1,
+                            paddingValues = paddingValues,
+                            onArchive = { mainViewModel.archive(it, !it.archived) },
+                            onDelete = { mainViewModel.delete(it) },
+                        )
                     }
                 }
             }

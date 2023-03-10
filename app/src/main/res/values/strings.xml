@@ -2,9 +2,13 @@
     <string name="app_name">Wallet</string>
 
     <string name="appbar_list">Passes List</string>
-    <string name="appbar_cloud">Cloud Storage</string>
+    <string name="appbar_archive">Archived Passes</string>
 
     <string name="action_add">Add</string>
+    <string name="action_archive">Archive</string>
+    <string name="action_unarchive">Unarchive</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
 
     <string name="trip_type_air">Air trip</string>
     <string name="trip_type_boat">Boat trip</string>
@@ -13,4 +17,9 @@
     <string name="trip_type_train">Train trip</string>
 
     <string name="archived">Archived</string>
+
+    <string name="passes_empty">No passes were found</string>
+
+    <string name="delete_dialog_title">Delete</string>
+    <string name="delete_dialog_message">Are you sure that you want to delete the pass? This cannot be undone.</string>
 </resources>

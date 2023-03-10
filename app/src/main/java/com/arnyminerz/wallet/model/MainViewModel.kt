@@ -103,4 +103,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 dao.insert(pass)
             }
     }
+
+    fun archive(pass: Pass, archived: Boolean = true) = async {
+        dao.archive(pass.id, archived)
+    }
+
+    fun delete(pass: Pass) = async {
+        dao.delete(pass)
+    }
 }

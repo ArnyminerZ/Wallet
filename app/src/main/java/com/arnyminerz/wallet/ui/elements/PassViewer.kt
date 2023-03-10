@@ -278,6 +278,7 @@ fun PassViewer(
             actions?.let {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                     content = it,
                 )
             }
