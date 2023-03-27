@@ -77,7 +77,7 @@ dependencies {
     implementation 'com.google.accompanist:accompanist-pager:0.28.0'
 
     // For loading images
-    implementation 'io.coil-kt:coil-compose:2.2.2'
+    implementation 'io.coil-kt:coil-compose:2.3.0'
 
     // For decompressing zip files
     implementation 'org.apache.commons:commons-compress:1.22'
